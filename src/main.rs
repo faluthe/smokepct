@@ -14,4 +14,5 @@ fn main() {
         sums.push(s);
         i += 32;
     }
+    println!(" . . ");
 }
