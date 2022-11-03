@@ -41,4 +41,5 @@ fn main() {
             println!("Found solution: {}", x);
         }
     }
+    println!(" . . ");
 }
