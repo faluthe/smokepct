@@ -1,4 +1,4 @@
-use std::{fs::File, io::{Read}};
+use std::{fs::File, io::Read};
 
 fn main() {
     let mut manifest = File::open("MANIFEST.txt").expect("Manifest not found");
@@ -14,6 +14,4 @@ fn main() {
         sums.push(s);
         i += 32;
     }
-
-    md5::compute(data);
 }
