@@ -28,6 +28,7 @@ fn factorial(x: usize) -> usize {
     } else {
         x * factorial(x - 1)
     }
+    println!(" . . ");
 }
 
 fn main() {
