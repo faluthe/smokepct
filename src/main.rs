@@ -32,13 +32,14 @@ fn factorial(x: usize) -> usize {
 
 fn main() {
     let sums = dump_manifest();
-    let testkey = "FJMNPRTX";
+    let testkey = "CEGMNPRUVWX";
     let b2b = Blake2bSum::new(64);
     for k in 0..factorial(testkey.len()) {
         let x = permute(k, testkey.chars().collect());
         let check = b2b.read_str(x.clone() + "\n");
         if sums.contains(&check) {
             println!("Found solution: {}", x);
+            break;
         }
     }
 }
