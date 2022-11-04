@@ -1,9 +1,10 @@
 use std::{fs::File, io::Read, collections::HashSet, thread, time::{Instant, Duration}};
-
 use b2sum_rust::Blake2bSum;
 
+
 fn dump_manifest() -> HashSet<String> {
-    let mut manifest = File::open("MANIFEST/1").expect("Manifest not found");
+    let manifest_path = "MANIFEST/".to_owned() + "1";
+    let mut manifest = File::open(manifest_path).expect("Manifest not found");
     let mut data = String::new();
     manifest.read_to_string(&mut data).unwrap();
     let mut sums: HashSet<String> = HashSet::new();
@@ -38,6 +39,7 @@ fn main() {
     let mut threads = vec![];
     let thread_count = 8;
 
+    
     for t in 0..thread_count {
         let sums = dump_manifest();
         let tmp_key = testkey;
@@ -56,7 +58,7 @@ fn main() {
                 let check = b2b.read_str(x.clone() + "\n");
 
                 if sums.contains(&check) {
-                    println!("Found solution: {}", x);
+                    println!("Found solution: {} [took {}ms]", x, start.elapsed().as_millis());
                     break;
                 }
                 // thread::sleep(Duration::from_millis(50));
@@ -69,5 +71,5 @@ fn main() {
     }
 
     println!(" . . ");
-    print!("time: {}", start.elapsed().as_millis());
+    print!("time: {}", start.elapsed().as_secs());
 }
