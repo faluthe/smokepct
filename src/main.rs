@@ -3,7 +3,7 @@ use std::{fs::File, io::Read, collections::HashSet, thread, time::{Instant, Dura
 use b2sum_rust::Blake2bSum;
 
 fn dump_manifest() -> HashSet<String> {
-    let mut manifest = File::open("MANIFEST/MANIFEST.txt").expect("Manifest not found");
+    let mut manifest = File::open("MANIFEST/1").expect("Manifest not found");
     let mut data = String::new();
     manifest.read_to_string(&mut data).unwrap();
     let mut sums: HashSet<String> = HashSet::new();
@@ -30,17 +30,8 @@ fn factorial(x: usize) -> usize {
     }
 }
 
-// fn thread_begin(sums: &HashSet<String>, testkey: &str, b2b: &Blake2bSum, k: usize) {
-//     let x = permute(k, testkey.chars().collect());
-//     let check = b2b.read_str(x.clone() + "\n");
-//     if sums.contains(&check) {
-//         println!("Found solution: {}", x);
-//     }
-
-// }
-
 fn main() {
-    let testkey = "CFJMNPQRTUWY";
+    let testkey = "HFXCWEAUTN";
     let max_permutations = factorial(testkey.len());
     println!("max: {}", max_permutations);
     let start = Instant::now();
@@ -51,7 +42,7 @@ fn main() {
         let sums = dump_manifest();
         let tmp_key = testkey;
         let b2b = Blake2bSum::new(64);
-        println!("run: ({}) of {}", t, tmp_key);
+        println!("thread: ({}) for {}", t, tmp_key);
 
         let block = &max_permutations / thread_count;
         let max = block + (block * t);
@@ -63,6 +54,7 @@ fn main() {
                 let x = permute(k, testkey.chars().collect());
                 // println!("{}", x);
                 let check = b2b.read_str(x.clone() + "\n");
+
                 if sums.contains(&check) {
                     println!("Found solution: {}", x);
                     break;
@@ -75,7 +67,6 @@ fn main() {
     for thread in threads {
         let _ = thread.join().unwrap();
     }
-    // threads.join().unwrap();
 
     println!(" . . ");
     print!("time: {}", start.elapsed().as_millis());
