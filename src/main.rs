@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, collections::HashSet, thread, time::{Instant}};
+use std::{fs::File, io::Read, collections::HashSet, thread, time::{Instant, Duration}};
 
 use b2sum_rust::Blake2bSum;
 
@@ -56,21 +56,24 @@ fn main() {
         let block = &max_permutations / thread_count;
         let max = block + (block * t);
         let min = max - block;
-        
-        println!("\trunning: {} -> {}", min, max);
-        threads.push(thread::spawn(move || { 
+
+        println!("\tmin: {}\tmax: {}", min, max);
+        let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let x = permute(k, testkey.chars().collect());
+                // println!("{}", x);
                 let check = b2b.read_str(x.clone() + "\n");
                 if sums.contains(&check) {
                     println!("Found solution: {}", x);
+                    break;
                 }
-                break;
+                // thread::sleep(Duration::from_millis(50));
             }
-        }));
+        });
+        threads.push(thread_block);
     }
     for thread in threads {
-        let _ = thread.join();
+        let _ = thread.join().unwrap();
     }
     // threads.join().unwrap();
 
