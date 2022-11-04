@@ -28,7 +28,18 @@ fn factorial(x: usize) -> usize {
     } else {
         x * factorial(x - 1)
     }
-    println!(" . . ");
+}
+
+fn thread_begin(sums: &HashSet<String>, testkey: &str, b2b: &Blake2bSum) {
+    for k in 0..factorial(testkey.len()) {
+        let x = permute(k, testkey.chars().collect());
+        let check = b2b.read_str(x.clone() + "\n");
+        if sums.contains(&check) {
+            println!("Found solution: {}", x);
+        }
+        break;
+    }
+    
 }
 
 fn main() {
@@ -38,18 +49,17 @@ fn main() {
     let max_permutations = factorial(testkey.len());
     println!("max: {}", max_permutations);
     let start = Instant::now();
+    let mut threads = vec![];
+    for _ in 0..8 {
+        threads.push(thread::spawn(move || { 
+            thread_begin(&sums, testkey, &b2b);
+        }));
+    }
+    for thread in threads {
+        let _ = thread.join();
+    }
 
-    let threads = thread::spawn(move || {
-            for k in 0..factorial(testkey.len()) {
-                let x = permute(k, testkey.chars().collect());
-                let check = b2b.read_str(x.clone() + "\n");
-                if sums.contains(&check) {
-                    println!("Found solution: {}", x);
-                }
-                break;
-            }
-    });
-    threads.join().unwrap();
+    // thread.join().unwrap();
     println!(" . . ");
     print!("time: {}", start.elapsed().as_millis());
 }
