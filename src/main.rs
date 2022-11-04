@@ -3,7 +3,7 @@ use std::{fs::File, io::Read, collections::HashSet, thread, time::{Duration, Ins
 use b2sum_rust::Blake2bSum;
 
 fn dump_manifest() -> HashSet<String> {
-    let mut manifest = File::open("MANIFEST.txt").expect("Manifest not found");
+    let mut manifest = File::open("/MANIFEST/MANIFEST.txt").expect("Manifest not found");
     let mut data = String::new();
     manifest.read_to_string(&mut data).unwrap();
     let mut sums: HashSet<String> = HashSet::new();
