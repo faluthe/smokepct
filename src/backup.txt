@@ -1,0 +1,47 @@
+use std::{fs::File, io::Read, collections::HashSet};
+
+use b2sum_rust::Blake2bSum;
+
+fn dump_manifest() -> HashSet<Vec<u8>> {
+    let mut manifest = File::open("MANIFEST.txt").expect("Manifest not found");
+    let mut data = String::new();
+    manifest.read_to_string(&mut data).unwrap();
+    let data = data.replace("\r\n", "");
+    let mut sums: HashSet<Vec<u8>> = HashSet::new();
+    
+    let mut i = 0;
+    while i < data.len() {
+        // 128 characters, 64 bytes
+        let s: String = data.chars().skip(i).take(128).collect();
+        let d: Vec<u8> = (0..s.len()).step_by(2).map(|x| u8::from_str_radix(&s[x..x + 2], 16).unwrap()).collect();
+        //println!("{} => {:x?}", s, d);
+        println!("{:?}", d);
+        sums.insert(d);
+        i += 128;
+    }
+    sums
+}
+
+fn permute(mut k: usize, mut s: Vec<char>) -> String {
+    for i in 1..s.len() {
+        s.swap(k % (i + 1), i);
+        k = k / (i + 1);
+    }
+    s.into_iter().collect()
+}
+
+fn main() {
+    let sums = dump_manifest();
+    let testkey = "FJMNPRTX";
+    for k in 0..40320 {
+        let x = permute(k, testkey.chars().collect());
+        let check = md5::compute(x.clone());
+        if sums.contains(&check.to_vec()) {
+            println!("Found {:?}", check);
+        }
+    }
+    
+    let fptr = Blake2bSum::new(64);
+    let correct = fptr.read_str("NFTPJRMX\n");
+    println!("{}", correct.to_lowercase());
+}
