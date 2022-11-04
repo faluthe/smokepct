@@ -1,9 +1,9 @@
-use std::{fs::File, io::Read, collections::HashSet, thread, time::{Duration, Instant}};
+use std::{fs::File, io::Read, collections::HashSet, thread, time::{Instant}};
 
 use b2sum_rust::Blake2bSum;
 
 fn dump_manifest() -> HashSet<String> {
-    let mut manifest = File::open("/MANIFEST/MANIFEST.txt").expect("Manifest not found");
+    let mut manifest = File::open("MANIFEST/MANIFEST.txt").expect("Manifest not found");
     let mut data = String::new();
     manifest.read_to_string(&mut data).unwrap();
     let mut sums: HashSet<String> = HashSet::new();
@@ -30,36 +30,50 @@ fn factorial(x: usize) -> usize {
     }
 }
 
-fn thread_begin(sums: &HashSet<String>, testkey: &str, b2b: &Blake2bSum) {
-    for k in 0..factorial(testkey.len()) {
-        let x = permute(k, testkey.chars().collect());
-        let check = b2b.read_str(x.clone() + "\n");
-        if sums.contains(&check) {
-            println!("Found solution: {}", x);
-        }
-        break;
-    }
-    
-}
+// fn thread_begin(sums: &HashSet<String>, testkey: &str, b2b: &Blake2bSum, k: usize) {
+//     let x = permute(k, testkey.chars().collect());
+//     let check = b2b.read_str(x.clone() + "\n");
+//     if sums.contains(&check) {
+//         println!("Found solution: {}", x);
+//     }
+
+// }
 
 fn main() {
-    let sums = dump_manifest();
-    let testkey = "CFJMNPQRTUW";
-    let b2b = Blake2bSum::new(64);
+    let testkey = "CFJMNPQRTUWY";
     let max_permutations = factorial(testkey.len());
     println!("max: {}", max_permutations);
     let start = Instant::now();
     let mut threads = vec![];
-    for _ in 0..8 {
+    let thread_count = 8;
+
+    for t in 0..thread_count {
+        let sums = dump_manifest();
+        let tmp_key = testkey;
+        let b2b = Blake2bSum::new(64);
+        println!("run: ({}) of {}", t, tmp_key);
+
+        let block = &max_permutations / thread_count;
+        let max = block + (block * t);
+        let min = max - block;
+        
+        println!("\trunning: {} -> {}", min, max);
         threads.push(thread::spawn(move || { 
-            thread_begin(&sums, testkey, &b2b);
+            for k in min..max {
+                let x = permute(k, testkey.chars().collect());
+                let check = b2b.read_str(x.clone() + "\n");
+                if sums.contains(&check) {
+                    println!("Found solution: {}", x);
+                }
+                break;
+            }
         }));
     }
     for thread in threads {
         let _ = thread.join();
     }
+    // threads.join().unwrap();
 
-    // thread.join().unwrap();
     println!(" . . ");
     print!("time: {}", start.elapsed().as_millis());
 }
