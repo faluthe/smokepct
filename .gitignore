@@ -1,2 +1,3 @@
 /target
-/src/MANIFEST
+/src/MANIFEST/*
+/src/logs/*
