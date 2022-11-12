@@ -1,11 +1,11 @@
 use std::{fs::File, io::{Read, Write}, collections::HashSet, thread, time::{Instant}};
 use b2sum_rust::Blake2bSum;
+use num_format::{ToFormattedString, Locale};
 
 // Initial Data
-const THREADS: usize = 8;
-const PZL_KEY: &str = "ABCDEFGHIJK";
-const MAN_FILE: &str = "1";
-
+const THREADS: usize = 4;
+const PZL_KEY: &str = "GHJLMNPQRTWXY";
+const MAN_FILE: &str = "B";
 
 fn dump_manifest() -> HashSet<String> {
     let manifest_path = "MANIFEST/".to_owned() + MAN_FILE;
@@ -20,12 +20,12 @@ fn dump_manifest() -> HashSet<String> {
     sums
 }
 
-fn permute(mut k: usize, mut s: Vec<char>) -> String {
-    for i in 1..s.len() {
-        s.swap(k % (i + 1), i);
+fn permute(mut k: usize, mut string: Vec<char>) -> String {
+    for i in 1..string.len() {
+        string.swap(k % (i + 1), i);
         k = k / (i + 1);
     }
-    s.into_iter().collect()
+    string.into_iter().collect()
 }
 
 fn factorial(x: usize) -> usize {
@@ -40,7 +40,7 @@ fn main() {
     let max_permutations = factorial(PZL_KEY.len());
     println!("[ pct{} :: {} ]", MAN_FILE, PZL_KEY);
     println!("base: {}", PZL_KEY.chars().count());
-    println!("max: {} \n", max_permutations);
+    println!("max: {} \n", max_permutations.to_formatted_string(&Locale::en));
     let start = Instant::now();
     let mut threads = vec![];
 
@@ -58,7 +58,8 @@ fn main() {
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let x = permute(k, PZL_KEY.chars().collect());
-                // println!("{}", x);
+                // println!(" {:16}/{}: {}:{} ", k, max, x, start.elapsed().as_secs_f32());
+
                 let check = b2b.read_str(x.clone() + "\n");
 
                 if sums.contains(&check) {
