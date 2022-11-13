@@ -4,8 +4,8 @@ use num_format::{ToFormattedString, Locale};
 
 // Initial Data
 const THREADS: usize = 16;
-const PZL_KEY: &str = "HFXCWEAUTN";
-const MAN_FILE: &str = "1";
+const PZL_KEY: &str = "GHJLMNPQRTWXY";
+const MAN_FILE: &str = "B";
 
 fn dump_manifest() -> HashSet<String> {
     let manifest_path = "MANIFEST/".to_owned() + MAN_FILE;
@@ -43,6 +43,7 @@ struct KnownLetter {
 
 fn remove_known(s: &mut String, l: char, num: usize) -> Option<KnownLetter> {
     s.remove(s.find(l)?);
+
     Some(KnownLetter { l, pos: num })
 }
 
@@ -50,9 +51,14 @@ fn remove_known(s: &mut String, l: char, num: usize) -> Option<KnownLetter> {
 fn restore_known(s: &mut String, k: &KnownLetter) {
     s.insert(k.pos, k.l);
 }
-
-// HNTUXERPGMW
+// 0 : 'K',
+// 1 : 'L',
+// 2 : 'M',
+// 3 : 'P'
+// HNTUXE_PGMW
+// K__________
 fn main() {
+    
     let max_permutations = factorial(PZL_KEY.len());
     println!("[ pct{} :: {} ]", MAN_FILE, PZL_KEY);
     println!("base: {}", PZL_KEY.chars().count());
@@ -64,12 +70,13 @@ fn main() {
         let sums = dump_manifest();
         let mut tmp_key = String::from(PZL_KEY);
         let b2b = Blake2bSum::new(64);
-        let known = remove_known(&mut tmp_key, 'H', 0).unwrap();
-        let known1 = remove_known(&mut tmp_key, 'U', 3).unwrap();
-        let known2 = remove_known(&mut tmp_key, 'N', 1).unwrap();
+        let known0 = remove_known(&mut tmp_key, 'Y', 0).unwrap();
+        let known1 = remove_known(&mut tmp_key, 'Q', 1).unwrap();
+        let known2 = remove_known(&mut tmp_key, 'H', 12).unwrap();
+        let new_max = factorial(tmp_key.len());
         println!("thread: ({}) for {}", t, tmp_key);
 
-        let block = &max_permutations / THREADS;
+        let block = &new_max / THREADS;
         let max = block + (block * t);
         let min = max - block;
 
@@ -79,10 +86,10 @@ fn main() {
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
-                restore_known(&mut x, &known);
+                restore_known(&mut x, &known0);
                 restore_known(&mut x, &known1);
                 restore_known(&mut x, &known2);
-                //println!("x: {}", x);
+                // println!("x: {}", x);
                 // println!(" {:16}/{}: {}:{} ", k, max, x, start.elapsed().as_secs_f32());
 
                 let check = b2b.read_str(x.clone() + "\n");
