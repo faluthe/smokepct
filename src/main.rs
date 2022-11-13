@@ -108,6 +108,8 @@ fn benchmarks(base_height: usize) {
         }
 
     }
+
+    log_file.write( format!("==================================================================").as_bytes() ).unwrap();
 }
 
 
@@ -184,6 +186,6 @@ fn smoke_pct() {
 
 fn main() {
     smoke_pct();
-    benchmarks(13);
+    benchmarks(12);
 
 }
