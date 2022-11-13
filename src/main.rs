@@ -4,8 +4,8 @@ use num_format::{ToFormattedString, Locale};
 
 // Initial Data
 const THREADS: usize = 16;
-const PZL_KEY: &str = "EGHMNPRTUWX";
-const MAN_FILE: &str = "8";
+const PZL_KEY: &str = "HFXCWEAUTN";
+const MAN_FILE: &str = "1";
 
 fn dump_manifest() -> HashSet<String> {
     let manifest_path = "MANIFEST/".to_owned() + MAN_FILE;
@@ -73,7 +73,9 @@ fn main() {
         let max = block + (block * t);
         let min = max - block;
 
-        println!("\tmin: {}\tmax: {}", min, max);
+        println!("\tmin: {}\tmax: {}", 
+                min.to_formatted_string(&Locale::en), 
+                max.to_formatted_string(&Locale::en));
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
@@ -102,13 +104,16 @@ fn main() {
     
     println!(" [ pct{} :: {} ]", MAN_FILE, PZL_KEY);
     println!("  . puzzle_base: {}", PZL_KEY.chars().count());
-    println!("  . iters: {}", max_permutations);
+    println!("  . iters: {}", max_permutations.to_formatted_string(&Locale::en));
     println!("  . threads: {}", THREADS);
     println!("  . time: {}ms", start.elapsed().as_millis());
 
     let mut log_file = File::options().append(true).create(true).open("logs/timers").expect("My dumbass error");
 
-    log_file.write( format!("{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", "Key:", PZL_KEY, "Threads:", THREADS, "Base:", PZL_KEY.chars().count(), "Time:", start.elapsed().as_millis()).as_bytes() ).unwrap();
-
+    log_file.write( format!("{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+            "Key:", PZL_KEY, 
+            "Threads:", THREADS, 
+            "Base:", PZL_KEY.chars().count(), 
+            "Time:", start.elapsed().as_millis()).as_bytes() ).unwrap();
 
 }
