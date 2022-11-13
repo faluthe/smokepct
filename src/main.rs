@@ -3,9 +3,9 @@ use b2sum_rust::Blake2bSum;
 use num_format::{ToFormattedString, Locale};
 
 // Initial Data
-const THREADS: usize = 4;
-const PZL_KEY: &str = "GHJLMNPQRTWXY";
-const MAN_FILE: &str = "B";
+const THREADS: usize = 16;
+const PZL_KEY: &str = "EGHMNPRTUWX";
+const MAN_FILE: &str = "8";
 
 fn dump_manifest() -> HashSet<String> {
     let manifest_path = "MANIFEST/".to_owned() + MAN_FILE;
@@ -36,6 +36,22 @@ fn factorial(x: usize) -> usize {
     }
 }
 
+struct KnownLetter {
+    l: char,
+    pos: usize,
+}
+
+fn remove_known(s: &mut String, l: char, num: usize) -> Option<KnownLetter> {
+    s.remove(s.find(l)?);
+    Some(KnownLetter { l, pos: num })
+}
+
+// Modifies in place
+fn restore_known(s: &mut String, k: &KnownLetter) {
+    s.insert(k.pos, k.l);
+}
+
+// HNTUXERPGMW
 fn main() {
     let max_permutations = factorial(PZL_KEY.len());
     println!("[ pct{} :: {} ]", MAN_FILE, PZL_KEY);
@@ -46,8 +62,11 @@ fn main() {
 
     for t in 0..THREADS {
         let sums = dump_manifest();
-        let tmp_key = PZL_KEY;
+        let mut tmp_key = String::from(PZL_KEY);
         let b2b = Blake2bSum::new(64);
+        let known = remove_known(&mut tmp_key, 'H', 0).unwrap();
+        let known1 = remove_known(&mut tmp_key, 'U', 3).unwrap();
+        let known2 = remove_known(&mut tmp_key, 'N', 1).unwrap();
         println!("thread: ({}) for {}", t, tmp_key);
 
         let block = &max_permutations / THREADS;
@@ -57,7 +76,11 @@ fn main() {
         println!("\tmin: {}\tmax: {}", min, max);
         let thread_block = thread::spawn(move || { 
             for k in min..max {
-                let x = permute(k, PZL_KEY.chars().collect());
+                let mut x = permute(k, tmp_key.chars().collect());
+                restore_known(&mut x, &known);
+                restore_known(&mut x, &known1);
+                restore_known(&mut x, &known2);
+                //println!("x: {}", x);
                 // println!(" {:16}/{}: {}:{} ", k, max, x, start.elapsed().as_secs_f32());
 
                 let check = b2b.read_str(x.clone() + "\n");
