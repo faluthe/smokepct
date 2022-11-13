@@ -2,6 +2,7 @@ use std::{fs::File, io::{Read, Write}, collections::HashSet, thread, time::{Inst
 use b2sum_rust::Blake2bSum;
 use num_format::{ToFormattedString, Locale};
 
+
 // Initial Data
 const THREADS: usize = 16;
 const PZL_KEY: &str = "FHKLMOPQRSUWXY";
@@ -53,7 +54,7 @@ fn restore_known(s: &mut String, k: &KnownLetter) {
 }
 
 fn benchmarks(base_height: usize) {
-    // Benchmark the permutations of single-threaded BaseN ONLY
+    // Benchmark the permutations of threaded Base1 -> BaseN
     let mut log_file = File::options().append(true).create(true).open(
         "logs/".to_owned() + "BENCHMARK" + ".log")
         .expect("Error creating [BENCHMARK.log]");
@@ -66,8 +67,30 @@ fn benchmarks(base_height: usize) {
     while tmp_key.len() < base_height {
         let start = Instant::now();
         let max = factorial(tmp_key.len());
-        for k in 0..max {
-            permute(k, tmp_key.chars().collect());
+        let mut threads = vec![];
+
+        println!("Bank: {} :: Base: {} :: Threads: {}", 
+                tmp_key, 
+                tmp_key.chars().count(), 
+                THREADS);
+
+        for t in 0..THREADS {
+            let tmp_key_b = tmp_key.clone();
+            
+            let block = &max / THREADS;
+            let max = block + (block * t);
+            let min = max - block;
+            
+            let thread_block = thread::spawn(move || { 
+                for k in min..max {
+                    permute(k, tmp_key_b.chars().collect());
+
+                }
+            });
+            threads.push(thread_block);
+        }
+        for thread in threads {
+            let _ = thread.join().unwrap();
         }
 
         log_file.write( format!("{:9} '{}'\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
@@ -85,8 +108,8 @@ fn benchmarks(base_height: usize) {
         }
 
     }
-    
 }
+
 
 fn smoke_pct() {
     let max_permutations = factorial(PZL_KEY.len());
