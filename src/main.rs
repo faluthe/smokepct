@@ -55,7 +55,7 @@ fn restore_known(s: &mut String, k: &KnownLetter) {
 fn benchmarks(base_height: usize) {
     // Benchmark the permutations of single-threaded BaseN ONLY
     let mut log_file = File::options().append(true).create(true).open(
-        "logs/timers_".to_owned() + "BENCHMARK" + ".log")
+        "logs/".to_owned() + "BENCHMARK" + ".log")
         .expect("Error creating [BENCHMARK.log]");
         
     let mut tmp_key = String::with_capacity(15);
@@ -70,7 +70,7 @@ fn benchmarks(base_height: usize) {
             permute(k, tmp_key.chars().collect());
         }
 
-        log_file.write( format!("{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+        log_file.write( format!("{:9} '{}'\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
                 "Key:", tmp_key, 
                 "Base:", tmp_key.chars().count(), 
                 "Max:", max.to_formatted_string(&Locale::en), 
