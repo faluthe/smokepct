@@ -4,8 +4,8 @@ use num_format::{ToFormattedString, Locale};
 
 // Initial Data
 const THREADS: usize = 16;
-const PZL_KEY: &str = "GHJLMNPQRTWXY";
-const MAN_FILE: &str = "B";
+const PZL_KEY: &str = "FHKLMOPQRSUWXY";
+const MAN_FILE: &str = "C";
 
 fn dump_manifest() -> HashSet<String> {
     let manifest_path = "MANIFEST/".to_owned() + MAN_FILE;
@@ -51,14 +51,44 @@ fn remove_known(s: &mut String, l: char, num: usize) -> Option<KnownLetter> {
 fn restore_known(s: &mut String, k: &KnownLetter) {
     s.insert(k.pos, k.l);
 }
-// 0 : 'K',
-// 1 : 'L',
-// 2 : 'M',
-// 3 : 'P'
-// HNTUXE_PGMW
-// K__________
-fn main() {
+
+fn benchmarks(base_height: usize) {
+    // Benchmark the permutations of single-threaded BaseN ONLY
+    let mut log_file = File::options().append(true).create(true).open(
+        "logs/timers_".to_owned() + "BENCHMARK" + ".log")
+        .expect("Error creating [BENCHMARK.log]");
+        
+    let mut tmp_key = String::with_capacity(15);
+    let mut bank = String::from("FEDCBA");
+    let mut i = 0;
+    tmp_key.push_str(&i.to_string());
+
+    while tmp_key.len() < base_height {
+        let start = Instant::now();
+        let max = factorial(tmp_key.len());
+        for k in 0..max {
+            permute(k, tmp_key.chars().collect());
+        }
+
+        log_file.write( format!("{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+                "Key:", tmp_key, 
+                "Base:", tmp_key.chars().count(), 
+                "Max:", max.to_formatted_string(&Locale::en), 
+                "Time:", start.elapsed().as_millis()).as_bytes() ).unwrap();
+
+        if i < 9 {
+            i = i + 1;
+            tmp_key.push_str(&i.to_string());
+        }
+        else {
+            tmp_key.push_str(&bank.pop().unwrap().to_string());
+        }
+
+    }
     
+}
+
+fn smoke_pct() {
     let max_permutations = factorial(PZL_KEY.len());
     println!("[ pct{} :: {} ]", MAN_FILE, PZL_KEY);
     println!("base: {}", PZL_KEY.chars().count());
@@ -66,23 +96,26 @@ fn main() {
     let start = Instant::now();
     let mut threads = vec![];
 
+
     for t in 0..THREADS {
         let sums = dump_manifest();
         let mut tmp_key = String::from(PZL_KEY);
         let b2b = Blake2bSum::new(64);
-        let known0 = remove_known(&mut tmp_key, 'Y', 0).unwrap();
-        let known1 = remove_known(&mut tmp_key, 'Q', 1).unwrap();
-        let known2 = remove_known(&mut tmp_key, 'H', 12).unwrap();
+        let known0 = remove_known(&mut tmp_key, 'R', 0).unwrap();
+        let known1 = remove_known(&mut tmp_key, 'Y', 2).unwrap();
+        let known2 = remove_known(&mut tmp_key, 'U', 13).unwrap();
         let new_max = factorial(tmp_key.len());
-        println!("thread: ({}) for {}", t, tmp_key);
-
+        
         let block = &new_max / THREADS;
         let max = block + (block * t);
         let min = max - block;
-
-        println!("\tmin: {}\tmax: {}", 
+        
+        println!("thread: ({}) {} as base {}: {}", 
+                t, PZL_KEY, tmp_key.chars().count(), tmp_key);
+        println!("\t[min: {:>16}\tmax: {:>16}]", 
                 min.to_formatted_string(&Locale::en), 
                 max.to_formatted_string(&Locale::en));
+
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
@@ -98,7 +131,6 @@ fn main() {
                     println!("Found solution: {} [took {}ms]", x, start.elapsed().as_millis());
                     break;
                 }
-                // thread::sleep(Duration::from_millis(50));
             }
         });
         threads.push(thread_block);
@@ -115,12 +147,20 @@ fn main() {
     println!("  . threads: {}", THREADS);
     println!("  . time: {}ms", start.elapsed().as_millis());
 
-    let mut log_file = File::options().append(true).create(true).open("logs/timers").expect("My dumbass error");
+    let mut log_file = File::options().append(true).create(true).open(
+            "logs/timers_".to_owned() + MAN_FILE + ".log").expect("My dumbass error");
 
     log_file.write( format!("{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
             "Key:", PZL_KEY, 
             "Threads:", THREADS, 
             "Base:", PZL_KEY.chars().count(), 
             "Time:", start.elapsed().as_millis()).as_bytes() ).unwrap();
+
+}
+
+
+fn main() {
+    smoke_pct();
+    benchmarks(13);
 
 }
