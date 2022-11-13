@@ -5,8 +5,9 @@ use num_format::{ToFormattedString, Locale};
 
 // Initial Data
 const THREADS: usize = 16;
-const PZL_KEY: &str = "FHKLMOPQRSUWXY";
+const PZL_KEY: &str = "FGHJLMNPQTUWXY";
 const MAN_FILE: &str = "C";
+const KNOWNS: &str =  "W_UP__________";
 
 fn dump_manifest() -> HashSet<String> {
     let manifest_path = "MANIFEST/".to_owned() + MAN_FILE;
@@ -37,20 +38,39 @@ fn factorial(x: usize) -> usize {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 struct KnownLetter {
-    l: char,
+    letter: char,
     pos: usize,
 }
 
-fn remove_known(s: &mut String, l: char, num: usize) -> Option<KnownLetter> {
-    s.remove(s.find(l)?);
+fn populate_knowns(string: &str) -> Vec<KnownLetter> {
+    let mut knowns: Vec<KnownLetter> = Vec::new();
+    let mut i: usize = 0;
+    for (position, character) in string.char_indices() {
 
-    Some(KnownLetter { l, pos: num })
+        if character != '_' {
+            knowns.push(KnownLetter {letter: character, pos: position});
+        }
+        i = i + 1;
+    }
+    // println!("{:?}", knowns);
+    knowns
 }
 
-// Modifies in place
-fn restore_known(s: &mut String, k: &KnownLetter) {
-    s.insert(k.pos, k.l);
+fn remove_known_test(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
+        -> Option<&mut String> {
+    // key.remove(key.find(letter)?);
+    for value in knowns {
+        pzl_key.remove(pzl_key.find(value.letter)?);
+    }
+    Some(pzl_key)
+}
+
+fn restore_known_test(s: &mut String, k: &Vec<KnownLetter>) {
+    for j in k {
+        s.insert(j.pos, j.letter);
+    }
 }
 
 fn benchmarks(base_height: usize) {
@@ -124,13 +144,17 @@ fn smoke_pct() {
 
     for t in 0..THREADS {
         let sums = dump_manifest();
-        let mut tmp_key = String::from(PZL_KEY);
         let b2b = Blake2bSum::new(64);
-        let known0 = remove_known(&mut tmp_key, 'R', 0).unwrap();
-        let known1 = remove_known(&mut tmp_key, 'Y', 2).unwrap();
-        let known2 = remove_known(&mut tmp_key, 'U', 13).unwrap();
-        let new_max = factorial(tmp_key.len());
+
+        let mut tmp_key = String::from(PZL_KEY);
+        let known_values = populate_knowns(KNOWNS);
+        remove_known_test(&mut tmp_key, known_values.to_owned());
+        // println!("REMOVED KEY: {:?}", tmp_key);
         
+        println!("thread: ({}) for {}", t, tmp_key);
+        
+        
+        let new_max = factorial(tmp_key.len());
         let block = &new_max / THREADS;
         let max = block + (block * t);
         let min = max - block;
@@ -140,13 +164,13 @@ fn smoke_pct() {
         println!("\t[min: {:>16}\tmax: {:>16}]", 
                 min.to_formatted_string(&Locale::en), 
                 max.to_formatted_string(&Locale::en));
-
+                
+                let tmp_known_values = known_values.clone();
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
-                restore_known(&mut x, &known0);
-                restore_known(&mut x, &known1);
-                restore_known(&mut x, &known2);
+                restore_known_test(&mut x, &tmp_known_values);
+
                 // println!("x: {}", x);
                 // println!(" {:16}/{}: {}:{} ", k, max, x, start.elapsed().as_secs_f32());
 
@@ -186,6 +210,6 @@ fn smoke_pct() {
 
 fn main() {
     smoke_pct();
-    benchmarks(12);
+    // benchmarks(12);
 
 }
