@@ -1,0 +1,4 @@
+
+
+-Multithreading
+-take letters preknown

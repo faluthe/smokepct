@@ -1,23 +1,15 @@
-use std::{fs::File, io::Read, collections::HashSet};
+use std::{fs::File, io::Read, collections::HashSet, thread, time::{Instant, Duration}};
 
 use b2sum_rust::Blake2bSum;
 
-fn dump_manifest() -> HashSet<Vec<u8>> {
-    let mut manifest = File::open("MANIFEST.txt").expect("Manifest not found");
+fn dump_manifest() -> HashSet<String> {
+    let mut manifest = File::open("MANIFEST/1").expect("Manifest not found");
     let mut data = String::new();
     manifest.read_to_string(&mut data).unwrap();
-    let data = data.replace("\r\n", "");
-    let mut sums: HashSet<Vec<u8>> = HashSet::new();
+    let mut sums: HashSet<String> = HashSet::new();
     
-    let mut i = 0;
-    while i < data.len() {
-        // 128 characters, 64 bytes
-        let s: String = data.chars().skip(i).take(128).collect();
-        let d: Vec<u8> = (0..s.len()).step_by(2).map(|x| u8::from_str_radix(&s[x..x + 2], 16).unwrap()).collect();
-        //println!("{} => {:x?}", s, d);
-        println!("{:?}", d);
-        sums.insert(d);
-        i += 128;
+    for l in data.lines() {
+        sums.insert(l.to_uppercase());
     }
     sums
 }
@@ -30,18 +22,62 @@ fn permute(mut k: usize, mut s: Vec<char>) -> String {
     s.into_iter().collect()
 }
 
-fn main() {
-    let sums = dump_manifest();
-    let testkey = "FJMNPRTX";
-    for k in 0..40320 {
-        let x = permute(k, testkey.chars().collect());
-        let check = md5::compute(x.clone());
-        if sums.contains(&check.to_vec()) {
-            println!("Found {:?}", check);
-        }
+fn factorial(x: usize) -> usize {
+    if x == 1 {
+        x
+    } else {
+        x * factorial(x - 1)
     }
-    
-    let fptr = Blake2bSum::new(64);
-    let correct = fptr.read_str("NFTPJRMX\n");
-    println!("{}", correct.to_lowercase());
+}
+
+// fn thread_begin(sums: &HashSet<String>, testkey: &str, b2b: &Blake2bSum, k: usize) {
+//     let x = permute(k, testkey.chars().collect());
+//     let check = b2b.read_str(x.clone() + "\n");
+//     if sums.contains(&check) {
+//         println!("Found solution: {}", x);
+//     }
+
+// }
+
+fn main() {
+    let testkey = "HFXCWEAUTN";
+    let max_permutations = factorial(testkey.len());
+    println!("max: {}", max_permutations);
+    let start = Instant::now();
+    let mut threads = vec![];
+    let thread_count = 8;
+
+    for t in 0..thread_count {
+        let sums = dump_manifest();
+        let tmp_key = testkey;
+        let b2b = Blake2bSum::new(64);
+        println!("thread: ({}) for {}", t, tmp_key);
+
+        let block = &max_permutations / thread_count;
+        let max = block + (block * t);
+        let min = max - block;
+
+        println!("\tmin: {}\tmax: {}", min, max);
+        let thread_block = thread::spawn(move || { 
+            for k in min..max {
+                let x = permute(k, testkey.chars().collect());
+                // println!("{}", x);
+                let check = b2b.read_str(x.clone() + "\n");
+
+                if sums.contains(&check) {
+                    println!("Found solution: {}", x);
+                    break;
+                }
+                // thread::sleep(Duration::from_millis(50));
+            }
+        });
+        threads.push(thread_block);
+    }
+    for thread in threads {
+        let _ = thread.join().unwrap();
+    }
+    // threads.join().unwrap();
+
+    println!(" . . ");
+    print!("time: {}", start.elapsed().as_millis());
 }
