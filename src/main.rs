@@ -16,11 +16,12 @@ const KNOWNS: &str =  "R____________U";
 
 fn smoke_pct() {
     let max_permutations = factorial(PZL_KEY.len());
+    let start = Instant::now();
+    let mut threads = vec![];
+
     println!("[ pct{} :: {} ]", MAN_FILE, PZL_KEY);
     println!("base: {}", PZL_KEY.chars().count());
     println!("max: {} \n", max_permutations.to_formatted_string(&Locale::en));
-    let start = Instant::now();
-    let mut threads = vec![];
 
     for t in 0..THREADS {
         let sums = dump_manifest(MAN_FILE);
@@ -46,11 +47,9 @@ fn smoke_pct() {
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
                 restore_known_test(&mut x, &known_values_cp);
+                let check = b2b.read_str(x.clone() + "\n");
 
                 // println!("x: {}", x);
-                // println!(" {:16}/{}: {}:{} ", k, max, x, start.elapsed().as_secs_f32());
-
-                let check = b2b.read_str(x.clone() + "\n");
 
                 if sums.contains(&check) {
                     println!("Found solution: {} [took {}ms]", x, start.elapsed().as_millis());
