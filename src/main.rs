@@ -1,137 +1,18 @@
-use std::{fs::File, io::{Read, Write}, collections::HashSet, thread, time::{Instant}};
+use std::{fs::File, io::{Write}, thread, time::{Instant}};
 use b2sum_rust::Blake2bSum;
 use num_format::{ToFormattedString, Locale};
 
+mod utilities;
+
+use utilities::{permute, factorial, dump_manifest};
+use utilities::knowns::{populate_knowns, remove_known_test, restore_known_test};
+use utilities::unit_tests::benchmarks;
 
 // Initial Data
 const THREADS: usize = 16;
 const PZL_KEY: &str = "FGHJLMNPQTUWXY";
 const MAN_FILE: &str = "C";
-const KNOWNS: &str =  "W_UP__________";
-
-fn dump_manifest() -> HashSet<String> {
-    let manifest_path = "MANIFEST/".to_owned() + MAN_FILE;
-    let mut manifest = File::open(manifest_path).expect("Manifest not found");
-    let mut data = String::new();
-    manifest.read_to_string(&mut data).unwrap();
-    let mut sums: HashSet<String> = HashSet::new();
-    
-    for l in data.lines() {
-        sums.insert(l.to_uppercase());
-    }
-    sums
-}
-
-fn permute(mut k: usize, mut string: Vec<char>) -> String {
-    for i in 1..string.len() {
-        string.swap(k % (i + 1), i);
-        k = k / (i + 1);
-    }
-    string.into_iter().collect()
-}
-
-fn factorial(x: usize) -> usize {
-    if x == 1 {
-        x
-    } else {
-        x * factorial(x - 1)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-struct KnownLetter {
-    letter: char,
-    pos: usize,
-}
-
-fn populate_knowns(string: &str) -> Vec<KnownLetter> {
-    let mut knowns: Vec<KnownLetter> = Vec::new();
-    let mut i: usize = 0;
-    for (position, character) in string.char_indices() {
-
-        if character != '_' {
-            knowns.push(KnownLetter {letter: character, pos: position});
-        }
-        i = i + 1;
-    }
-    // println!("{:?}", knowns);
-    knowns
-}
-
-fn remove_known_test(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
-        -> Option<&mut String> {
-    // key.remove(key.find(letter)?);
-    for value in knowns {
-        pzl_key.remove(pzl_key.find(value.letter)?);
-    }
-    Some(pzl_key)
-}
-
-fn restore_known_test(s: &mut String, k: &Vec<KnownLetter>) {
-    for j in k {
-        s.insert(j.pos, j.letter);
-    }
-}
-
-fn benchmarks(base_height: usize) {
-    // Benchmark the permutations of threaded Base1 -> BaseN
-    let mut log_file = File::options().append(true).create(true).open(
-        "logs/".to_owned() + "BENCHMARK" + ".log")
-        .expect("Error creating [BENCHMARK.log]");
-        
-    let mut tmp_key = String::with_capacity(15);
-    let mut bank = String::from("FEDCBA");
-    let mut i = 0;
-    tmp_key.push_str(&i.to_string());
-
-    while tmp_key.len() < base_height {
-        let start = Instant::now();
-        let max = factorial(tmp_key.len());
-        let mut threads = vec![];
-
-        println!("Bank: {} :: Base: {} :: Threads: {}", 
-                tmp_key, 
-                tmp_key.chars().count(), 
-                THREADS);
-
-        for t in 0..THREADS {
-            let tmp_key_b = tmp_key.clone();
-            
-            let block = &max / THREADS;
-            let max = block + (block * t);
-            let min = max - block;
-            
-            let thread_block = thread::spawn(move || { 
-                for k in min..max {
-                    permute(k, tmp_key_b.chars().collect());
-
-                }
-            });
-            threads.push(thread_block);
-        }
-        for thread in threads {
-            let _ = thread.join().unwrap();
-        }
-
-        log_file.write( format!("{:9} '{}'\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
-                "Key:", tmp_key, 
-                "Base:", tmp_key.chars().count(), 
-                "Max:", max.to_formatted_string(&Locale::en), 
-                "Time:", start.elapsed().as_millis()).as_bytes() ).unwrap();
-
-        if i < 9 {
-            i = i + 1;
-            tmp_key.push_str(&i.to_string());
-        }
-        else {
-            tmp_key.push_str(&bank.pop().unwrap().to_string());
-        }
-
-    }
-
-    log_file.write( format!("==================================================================").as_bytes() ).unwrap();
-}
-
+const KNOWNS: &str =  "W_U__________N";
 
 fn smoke_pct() {
     let max_permutations = factorial(PZL_KEY.len());
@@ -141,9 +22,8 @@ fn smoke_pct() {
     let start = Instant::now();
     let mut threads = vec![];
 
-
     for t in 0..THREADS {
-        let sums = dump_manifest();
+        let sums = dump_manifest(MAN_FILE);
         let b2b = Blake2bSum::new(64);
 
         let mut tmp_key = String::from(PZL_KEY);
@@ -152,7 +32,6 @@ fn smoke_pct() {
         // println!("REMOVED KEY: {:?}", tmp_key);
         
         println!("thread: ({}) for {}", t, tmp_key);
-        
         
         let new_max = factorial(tmp_key.len());
         let block = &new_max / THREADS;
@@ -189,7 +68,6 @@ fn smoke_pct() {
     }
 
     println!("\n . . \n");
-    
     println!(" [ pct{} :: {} ]", MAN_FILE, PZL_KEY);
     println!("  . puzzle_base: {}", PZL_KEY.chars().count());
     println!("  . iters: {}", max_permutations.to_formatted_string(&Locale::en));
@@ -210,6 +88,6 @@ fn smoke_pct() {
 
 fn main() {
     smoke_pct();
-    // benchmarks(12);
+    benchmarks(12, THREADS);
 
 }
