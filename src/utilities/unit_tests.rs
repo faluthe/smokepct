@@ -3,7 +3,7 @@ use num_format::{ToFormattedString, Locale};
 
 use crate::{permute, factorial};
 
-pub fn benchmarks(base_height: usize, thread_count: usize) {
+pub fn dry_run(base_height: usize, thread_count: usize) {
     // Benchmark the permutations of threaded Base1 -> BaseN
     let mut log_file = File::options().append(true).create(true).open(
         "logs/".to_owned() + "BENCHMARK" + ".log")
