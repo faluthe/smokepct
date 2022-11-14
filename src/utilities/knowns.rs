@@ -1,3 +1,5 @@
+use std::borrow::{Borrow, BorrowMut};
+use ansi_term::Colour::{Red, Yellow, Blue};
 use crate::DEBUG;
 
 #[derive(Debug, Clone, Copy)]
@@ -12,19 +14,25 @@ impl Default for KnownLetter {
     }
 }
 
+impl KnownLetter {
+    // Increment position of some KnownLetter
+    pub fn increment_knowns(&mut self) {
+        self.pos += 1;
+    }
+}
+
 // Take a "A_B__C____D___" formatted string and produce a vector of KnownLetters
 pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
     let mut knowns: Vec<KnownLetter> = Vec::new();
     let mut i: usize = 0;
     for (position, character) in string.unwrap_or_default().char_indices() {
-
         if character != '_' {
             knowns.push(KnownLetter {letter: character, pos: position});
         }
         i = i + 1;
     }
     if DEBUG > 0 {
-        println!("@populate_knowns");
+        println!("{}", Red.underline().paint("@populate_knowns"));
         println!("{:?}", knowns);
     }
 
@@ -63,15 +71,30 @@ pub fn generate_knowns(bank: &str, knowns: Option<&Vec<KnownLetter>>) -> String 
 
     restore_knowns(&mut knowns_str, tmp_knowns);
     if DEBUG > 0 {
-        println!("@generate_knowns");
-        println!("[{}] :: {}", knowns_str, knowns_str.chars().count());
+        println!("{}", Red.underline().paint("@generate_knowns"));
+        println!("[{}] :: {}", Red.underline().paint(&knowns_str), knowns_str.chars().count());
     }
 
     knowns_str
 }
-// Increment position of some KnownLetter
-pub fn increment_knowns(known: &KnownLetter) -> KnownLetter {
-    let new = known.pos + 1;
 
-    return KnownLetter { letter: known.letter, pos: new }
+
+pub fn run_stride(string: &str, stride: &str, actual_knowns: &str) -> Vec<String>{
+    let mut current_knowns = populate_knowns(Some(stride));
+    let mut knowns_str: String;
+    let mut str_set: Vec<String> = Vec::new();
+    str_set.push(generate_knowns(string, Some(&current_knowns)));
+    
+    let top = string.chars().count() - stride.chars().count() - 1;
+    for _ in 0..top - 1 {
+        for k in current_knowns.as_mut_slice() {
+            if k.pos < string.chars().count() {
+                k.increment_knowns();
+            } else {}
+        }
+        knowns_str = generate_knowns(string, Some(&current_knowns));
+        str_set.push(knowns_str);
+    }
+
+    str_set
 }

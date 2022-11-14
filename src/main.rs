@@ -5,23 +5,23 @@ use num_format::{ToFormattedString, Locale};
 mod utilities;
 
 use utilities::{permute, factorial, dump_manifest};
-use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, generate_knowns};
+use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, generate_knowns, run_stride};
 use utilities::unit_tests::dry_run;
 
 // Options
 // . DEBUG = {0, 1, 2, 3, 4, 5} (level of verbosity)
-const DEBUG: usize = 0;
+const DEBUG: usize = 1;
 const PRINT: bool = true;
 const LOGS: bool = true;
 const BENCH: bool = false;
 
 // Initial Data
 const THREADS: usize = 8;
-const PZL_KEY: &str = "FHJLMNOPQRSTUWY";
-const KNOWNS: &str =  "Q______________";
+const PZL_KEY: &str = "EFNOPQRSTUVWXY";
+const KNOWNS: &str =  "T____________X";
+const STRIDE: &str = "SNF";
 // const KNOWNS: &str =  "ABCD____________";
-
-const MAN_FILE: &str = "D";
+const MAN_FILE: &str = "F";
 
 fn smoke_pct(pre_knowns: &str) {
     let max_permutations = factorial(PZL_KEY.len());
@@ -106,35 +106,44 @@ fn smoke_pct(pre_knowns: &str) {
 }
 
 fn main() {
-    const ALL_KNOWNS: [&str; 12] = [
-    "QMHL___________",
-    "Q_MHL__________",
-    "Q__MHL_________",
-    "Q___MHL________",
-    "Q____MHL_______",
-    "Q_____MHL______",
-    "Q______MHL_____",
-    "Q_______MHL____",
-    "Q________MHL___",
-    "Q_________MHL__",
-    "Q__________MHL_",
-    "Q___________MHL",
-    ];
-    let mut i = 0;
-    for k in ALL_KNOWNS {
-        println!("RUNNING ITER: {} on {}", i, k);
-        smoke_pct(k);
-        i = i + 1;
+
+
+
+
+    // let mut i = 0;
+    // for k in ALL_KNOWNS {
+    //     println!("RUNNING ITER: {} on {}", i, k);
+        // smoke_pct(k);
+    //     i = i + 1;
+    // }
+    // smoke_pct(KNOWNS);
+    // println!("{}", PZL_KEY);
+    let some_vec = run_stride(PZL_KEY, STRIDE, KNOWNS);
+    println!("KEY END {}", PZL_KEY);
+    println!("{:?}", some_vec);
+    for v in some_vec {
+        smoke_pct(&v);
     }
-
-    let tmpvec = populate_knowns(Some(KNOWNS));
-    generate_knowns(PZL_KEY, Some(&tmpvec));
-
-    populate_knowns(None);
-    generate_knowns(PZL_KEY, None);
-
     if BENCH == true {
         dry_run(PZL_KEY.chars().count(), THREADS);
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
