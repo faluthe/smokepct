@@ -5,14 +5,14 @@ use num_format::{ToFormattedString, Locale};
 mod utilities;
 
 use utilities::{permute, factorial, dump_manifest};
-use utilities::knowns::{populate_knowns, remove_known_test, restore_known_test};
+use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns};
 use utilities::unit_tests::benchmarks;
 
 // Initial Data
 const THREADS: usize = 16;
-const PZL_KEY: &str = "FHKLMOPQRSUWXY";
-const MAN_FILE: &str = "C";
-const KNOWNS: &str =  "R____________U";
+const PZL_KEY: &str = "HFXCWEAUTN";
+const KNOWNS: &str =  "C_________";
+const MAN_FILE: &str = "1";
 
 fn smoke_pct() {
     let max_permutations = factorial(PZL_KEY.len());
@@ -29,7 +29,7 @@ fn smoke_pct() {
 
         let mut tmp_key = String::from(PZL_KEY);
         let known_values = populate_knowns(KNOWNS);
-        remove_known_test(&mut tmp_key, known_values.to_owned());
+        remove_knowns(&mut tmp_key, known_values.to_owned());
                 
         let new_max = factorial(tmp_key.len());
         let block = &new_max / THREADS;
@@ -46,7 +46,7 @@ fn smoke_pct() {
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
-                restore_known_test(&mut x, &known_values_cp);
+                restore_knowns(&mut x, &known_values_cp);
                 let check = b2b.read_str(x.clone() + "\n");
 
                 // println!("x: {}", x);
@@ -85,6 +85,6 @@ fn smoke_pct() {
 
 fn main() {
     smoke_pct();
-    benchmarks(12, THREADS);
+    benchmarks(11, THREADS);
 
 }

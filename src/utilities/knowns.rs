@@ -18,7 +18,7 @@ pub fn populate_knowns(string: &str) -> Vec<KnownLetter> {
     knowns
 }
 
-pub fn remove_known_test(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
+pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
         -> Option<&mut String> {
     // key.remove(key.find(letter)?);
     for value in knowns {
@@ -27,7 +27,7 @@ pub fn remove_known_test(pzl_key: &mut String, knowns: Vec<KnownLetter>)
     Some(pzl_key)
 }
 
-pub fn restore_known_test(s: &mut String, k: &Vec<KnownLetter>) {
+pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
     for j in k {
         s.insert(j.pos, j.letter);
     }
