@@ -1,5 +1,5 @@
 /target
 /src/MANIFEST/*
 /src/logs/*
-*.DS_Store
+**/.DS_Store
 *.vscode
