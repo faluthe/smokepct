@@ -2,22 +2,6 @@ use std::{fs::File, io::{Write}, thread, time::{Instant}};
 use num_format::{ToFormattedString, Locale};
 
 use crate::{permute, factorial};
-// fn permute(mut k: usize, mut string: Vec<char>) -> String {
-//     for i in 1..string.len() {
-//         string.swap(k % (i + 1), i);
-//         k = k / (i + 1);
-//     }
-//     string.into_iter().collect()
-// }
-
-// fn factorial(x: usize) -> usize {
-//     if x == 1 {
-//         x
-//     } else {
-//         x * factorial(x - 1)
-//     }
-// }
-
 
 pub fn benchmarks(base_height: usize, thread_count: usize) {
     // Benchmark the permutations of threaded Base1 -> BaseN

@@ -10,9 +10,9 @@ use utilities::unit_tests::benchmarks;
 
 // Initial Data
 const THREADS: usize = 16;
-const PZL_KEY: &str = "HFXCWEAUTN";
-const KNOWNS: &str =  "C_________";
-const MAN_FILE: &str = "1";
+const PZL_KEY: &str = "";
+const KNOWNS: &str =  "______________Q";
+const MAN_FILE: &str = "D";
 
 fn smoke_pct() {
     let max_permutations = factorial(PZL_KEY.len());
@@ -85,6 +85,6 @@ fn smoke_pct() {
 
 fn main() {
     smoke_pct();
-    benchmarks(11, THREADS);
+    // benchmarks(11, THREADS);
 
 }
