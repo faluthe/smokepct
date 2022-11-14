@@ -1,4 +1,4 @@
-use std::{fs::File, io::{Write}, thread, time::{Instant}};
+use std::{fs::File, io::Write, thread, time::Instant};
 use b2sum_rust::Blake2bSum;
 use num_format::{ToFormattedString, Locale};
 
@@ -10,9 +10,9 @@ use utilities::unit_tests::benchmarks;
 
 // Initial Data
 const THREADS: usize = 16;
-const PZL_KEY: &str = "FGHJLMNPQTUWXY";
+const PZL_KEY: &str = "FHKLMOPQRSUWXY";
 const MAN_FILE: &str = "C";
-const KNOWNS: &str =  "W_U__________N";
+const KNOWNS: &str =  "R____________U";
 
 fn smoke_pct() {
     let max_permutations = factorial(PZL_KEY.len());
@@ -29,10 +29,7 @@ fn smoke_pct() {
         let mut tmp_key = String::from(PZL_KEY);
         let known_values = populate_knowns(KNOWNS);
         remove_known_test(&mut tmp_key, known_values.to_owned());
-        // println!("REMOVED KEY: {:?}", tmp_key);
-        
-        println!("thread: ({}) for {}", t, tmp_key);
-        
+                
         let new_max = factorial(tmp_key.len());
         let block = &new_max / THREADS;
         let max = block + (block * t);
@@ -44,11 +41,11 @@ fn smoke_pct() {
                 min.to_formatted_string(&Locale::en), 
                 max.to_formatted_string(&Locale::en));
                 
-                let tmp_known_values = known_values.clone();
+        let known_values_cp = known_values.clone();
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
-                restore_known_test(&mut x, &tmp_known_values);
+                restore_known_test(&mut x, &known_values_cp);
 
                 // println!("x: {}", x);
                 // println!(" {:16}/{}: {}:{} ", k, max, x, start.elapsed().as_secs_f32());
@@ -75,16 +72,17 @@ fn smoke_pct() {
     println!("  . time: {}ms", start.elapsed().as_millis());
 
     let mut log_file = File::options().append(true).create(true).open(
-            "logs/timers_".to_owned() + MAN_FILE + ".log").expect("My dumbass error");
+            "logs/timers_".to_owned() + MAN_FILE + ".log")
+            .expect("Error creating log_file");
 
-    log_file.write( format!("{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+    log_file.write(format!(
+            "{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
             "Key:", PZL_KEY, 
             "Threads:", THREADS, 
             "Base:", PZL_KEY.chars().count(), 
-            "Time:", start.elapsed().as_millis()).as_bytes() ).unwrap();
-
+            "Time:", start.elapsed().as_millis() 
+        ).as_bytes()).unwrap();
 }
-
 
 fn main() {
     smoke_pct();
