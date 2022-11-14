@@ -2,6 +2,7 @@ use std::{collections::HashSet, fs::File, io::Read};
 
 pub mod unit_tests;
 pub mod knowns;
+pub mod args;
 
 pub fn permute(mut k: usize, mut string: Vec<char>) -> String {
     for i in 1..string.len() {
@@ -19,9 +20,8 @@ pub fn factorial(x: usize) -> usize {
     }
 }
 
-pub fn dump_manifest(manifest: &str) -> HashSet<String> {
-    let manifest_path = "MANIFEST/".to_owned() + manifest;
-    let mut manifest = File::open(manifest_path).expect("Manifest not found");
+pub fn dump_manifest(manifest_path: String) -> HashSet<String> {
+    let mut manifest = File::open(&manifest_path).expect(format!("Manifest not found at path {}", manifest_path).as_str());
     let mut data = String::new();
     manifest.read_to_string(&mut data).unwrap();
     let mut sums: HashSet<String> = HashSet::new();
