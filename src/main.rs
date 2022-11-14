@@ -19,19 +19,18 @@ const BENCH: bool = false;
 
 // Initial Data
 const KNOWNS: &str =  "_____________";
-// const KNOWNS: &str =  "ABCD____________";
+//const THREADS: usize = 8;
+//const PZL_KEY: &str = "EFNOPQRSTUVWXY";
+//const KNOWNS: &str =  "T____________X";
+//const STRIDE: &str = "SNF";
+//const KNOWNS: &str =  "ABCD____________";
+//const MAN_FILE: &str = "F";
 
 fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
     let thread_count = arguments.thread_count;
     let letters = arguments.letters.clone();
     let pct_x = arguments.pct_x.clone();
     let max_permutations = factorial(letters.len());
-//const THREADS: usize = 8;
-//const PZL_KEY: &str = "EFNOPQRSTUVWXY";
-//const KNOWNS: &str =  "T____________X";
-//const STRIDE: &str = "SNF";
-// const KNOWNS: &str =  "ABCD____________";
-//const MAN_FILE: &str = "F";
 
     let start = Instant::now();
     let mut threads = vec![];
@@ -119,28 +118,28 @@ fn main() {
     let arguments = args::get_options(env::args());
 
     smoke_pct(KNOWNS, &arguments);
+    
 
-    let tmpvec = populate_knowns(Some(KNOWNS));
-    generate_knowns(arguments.letters.as_str(), Some(&tmpvec));
+    // let tmpvec = populate_knowns(Some(KNOWNS));
+    // generate_knowns(arguments.letters.as_str(), Some(&tmpvec));
 
-    populate_knowns(None);
-    generate_knowns(arguments.letters.as_str(), None);
-
+    // populate_knowns(None);
+    // generate_knowns(arguments.letters.as_str(), None);
 
     // let mut i = 0;
     // for k in ALL_KNOWNS {
     //     println!("RUNNING ITER: {} on {}", i, k);
-        // smoke_pct(k);
+    //     smoke_pct(k);
     //     i = i + 1;
     // }
     // smoke_pct(KNOWNS);
     // println!("{}", PZL_KEY);
-    //let some_vec = run_stride(PZL_KEY, STRIDE, KNOWNS);
-    //println!("KEY END {}", PZL_KEY);
-    //println!("{:?}", some_vec);
-    //for v in some_vec {
-        smoke_pct(&v);
-    }
+    // let some_vec = run_stride(PZL_KEY, STRIDE, KNOWNS);
+    // println!("KEY END {}", PZL_KEY);
+    // println!("{:?}", some_vec);
+    // for v in some_vec {
+    //     smoke_pct(&v);
+    // }
     if BENCH == true {
         dry_run(arguments.letters.chars().count(), arguments.thread_count);
     }
