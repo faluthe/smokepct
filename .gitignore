@@ -1,3 +1,4 @@
 /target
 /src/MANIFEST/*
 /src/logs/*
+*.DS_STORE
