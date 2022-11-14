@@ -6,13 +6,13 @@ use num_format::{ToFormattedString, Locale};
 mod utilities;
 
 use utilities::{permute, factorial, dump_manifest};
-use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, generate_knowns};
+use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, generate_knowns, run_stride};
 use utilities::unit_tests::dry_run;
 use utilities::args::{self, Opts};
 
 // Options
 // . DEBUG = {0, 1, 2, 3, 4, 5} (level of verbosity)
-const DEBUG: usize = 0;
+const DEBUG: usize = 1;
 const PRINT: bool = true;
 const LOGS: bool = true;
 const BENCH: bool = false;
@@ -26,6 +26,13 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
     let letters = arguments.letters.clone();
     let pct_x = arguments.pct_x.clone();
     let max_permutations = factorial(letters.len());
+//const THREADS: usize = 8;
+//const PZL_KEY: &str = "EFNOPQRSTUVWXY";
+//const KNOWNS: &str =  "T____________X";
+//const STRIDE: &str = "SNF";
+// const KNOWNS: &str =  "ABCD____________";
+//const MAN_FILE: &str = "F";
+
     let start = Instant::now();
     let mut threads = vec![];
 
@@ -119,8 +126,41 @@ fn main() {
     populate_knowns(None);
     generate_knowns(arguments.letters.as_str(), None);
 
+
+    // let mut i = 0;
+    // for k in ALL_KNOWNS {
+    //     println!("RUNNING ITER: {} on {}", i, k);
+        // smoke_pct(k);
+    //     i = i + 1;
+    // }
+    // smoke_pct(KNOWNS);
+    // println!("{}", PZL_KEY);
+    //let some_vec = run_stride(PZL_KEY, STRIDE, KNOWNS);
+    //println!("KEY END {}", PZL_KEY);
+    //println!("{:?}", some_vec);
+    //for v in some_vec {
+        smoke_pct(&v);
+    }
     if BENCH == true {
         dry_run(arguments.letters.chars().count(), arguments.thread_count);
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

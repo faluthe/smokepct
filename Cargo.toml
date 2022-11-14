@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 b2sum-rust = "0.3.0"
 num-format = "0.4.3"
+ansi_term = "0.12"
