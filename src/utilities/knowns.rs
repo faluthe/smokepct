@@ -22,7 +22,8 @@ impl KnownLetter {
 
 //////////////////////////////////////////////////////////////////////////////////
 //      Take a "A_B__C____D___" formatted string 
-//          && produce a vector of KnownLetters
+//          -> produce a vector of KnownLetters
+//
 pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
     let mut knowns: Vec<KnownLetter> = Vec::new();
     for (position, character) in string.unwrap_or_default().char_indices() {
@@ -47,6 +48,7 @@ pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
 
 //////////////////////////////////////////////////////////////////////////////////
 //      Remove KnownLetters from key to give relevant letters to permute
+//
 pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
         -> Option<&mut String> {
     // key.remove(key.find(letter)?);
@@ -58,17 +60,22 @@ pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>)
 
 //////////////////////////////////////////////////////////////////////////////////
 //      Insert KnownLetters into a string at their intended index
+//
 pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
     for j in k {
-        if DEBUG > 1 {
+        if DEBUG > 3 {
             println!("{}", Red.paint("@restore_knowns-------->"));
-            println!("{} pos: {}, letter: {}", Blue.bold().paint("Insert.."), Blue.bold().paint(j.pos.to_string()), Blue.bold().paint(j.letter.to_string()));
+            println!("{} pos: {}, letter: {}", 
+                Blue.bold().paint("Insert.."), 
+                Blue.bold().paint(j.pos.to_string()), 
+                Blue.bold().paint(j.letter.to_string())
+            );
             
         }
         // Insert current letter
         s.insert(j.pos, j.letter);
         
-        if DEBUG > 1 {
+        if DEBUG > 3 {
             println!("\n{}", Blue.bold().paint("Success!"));
             println!("{}", Red.paint("<------------------------\n"));
         }
@@ -77,6 +84,7 @@ pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
 //////////////////////////////////////////////////////////////////////////////////
 //      Generate STRING of KnownLetter in format "A_B___C__D____"
 //          - uses restore_knowns() but with more functionality
+//
 pub fn generate_knowns(bank: &str, knowns: Option<&Vec<KnownLetter>>) -> String {
     // In default case, make empty vector and generate empty "___+n" string
     let empty = vec![KnownLetter::default()];

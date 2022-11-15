@@ -13,7 +13,7 @@ use utilities::args::{self, Opts};
 // Options
 // . DEBUG = {0, 1, 2, 3, 4, 5} (level of verbosity)
 const USE_CMD: bool = true;
-const DEBUG: usize = 1;
+const DEBUG: usize = 2;
 const LOGS: bool = true;
 const BENCH: bool = false;
 
