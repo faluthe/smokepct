@@ -121,8 +121,11 @@ fn main() {
             dry_run(arguments.letters.chars().count(), arguments.thread_count);
         }
 
-    } else {
+
+
+
         
+    } else {
         // Run unit_tests
         const MAN_FILE: &str = "F";
         let const_opts = Opts{ 
@@ -142,8 +145,5 @@ fn main() {
         for v in some_vec {
             smoke_pct(&v, Some(&const_opts).unwrap());
         }
-    }
-    
-    
-    
+    }  
 }
