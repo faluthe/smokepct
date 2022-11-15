@@ -58,11 +58,14 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
         let min = max - block;
         
         if DEBUG > 0 {
-            println!("thread: ({}) {} as base {}: {}", 
-                    t, 
-                    Green.bold().paint(&letters), 
-                    Purple.bold().paint(tmp_key.chars().count().to_string()), 
-                    Purple.paint(&tmp_key)
+            println!("{} {}{}{} {} as base {}: {}",
+                Blue.dimmed().paint("thread:"),
+                Blue.dimmed().paint("("),
+                Blue.paint(t.to_string()),
+                Blue.dimmed().paint(")"),
+                Green.bold().paint(&letters), 
+                Purple.bold().paint(tmp_key.chars().count().to_string()), 
+                Purple.paint(&tmp_key)
             );
             println!("\t[min: {:>16}\tmax: {:>16}]", 
                     min.to_formatted_string(&Locale::en), 
@@ -83,8 +86,10 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
 
                 if sums.contains(&check) {
                     if DEBUG > 0 {
-                        println!("Found solution: {} [took {}ms]", 
-                            x, start.elapsed().as_millis());
+                        println!("{} {} [took {}ms]",
+                            Cyan.bold().paint("Found solution:"), 
+                            Cyan.bold().paint(&x),
+                            start.elapsed().as_millis());
                     }
                     break;
                 }
