@@ -110,6 +110,7 @@ const THREADS: usize = 8;
 const PZL_KEY: &str = "EFNOPQRSTUVWXY";
 const KNOWNS: &str =  "T____________X";
 const STRIDE: &str = "SNF";
+const MAN_FILE: &str = "F";
 
 fn main() {
     if USE_CMD == true {
@@ -124,10 +125,9 @@ fn main() {
 
 
 
-        
+
     } else {
         // Run unit_tests
-        const MAN_FILE: &str = "F";
         let const_opts = Opts{ 
             thread_count: THREADS, 
             letters: PZL_KEY.to_string(), 
