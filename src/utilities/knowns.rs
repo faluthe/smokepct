@@ -1,5 +1,4 @@
-use std::borrow::{Borrow, BorrowMut};
-use ansi_term::Colour::{Red, Yellow, Blue};
+use ansi_term::Colour::{Red, Yellow, Blue, Purple, Cyan, White, RGB};
 use crate::DEBUG;
 
 #[derive(Debug, Clone, Copy)]
@@ -20,26 +19,32 @@ impl KnownLetter {
         self.pos += 1;
     }
 }
-
-// Take a "A_B__C____D___" formatted string and produce a vector of KnownLetters
+//////////////////////////////////////////////////////////////////////////////////
+//      Take a "A_B__C____D___" formatted string 
+//          && produce a vector of KnownLetters
 pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
     let mut knowns: Vec<KnownLetter> = Vec::new();
-    let mut i: usize = 0;
     for (position, character) in string.unwrap_or_default().char_indices() {
         if character != '_' {
             knowns.push(KnownLetter {letter: character, pos: position});
         }
-        i = i + 1;
     }
+    knowns.shrink_to_fit();
     if DEBUG > 0 {
-        println!("{}", Red.underline().paint("@populate_knowns"));
+        println!("{}", Red.paint("@populate_knowns-------->"));
+        println!("{} {}", 
+            Blue.bold().paint("Capacity:"), 
+            Yellow.bold().paint(knowns.capacity().to_string())
+        );
         println!("{:?}", knowns);
-    }
+        println!("\n{}", Blue.bold().paint("Success!"));
+        println!("{}", Red.paint("<------------------------\n"));
 
+    }
     knowns
 }
-
-// Remove KnownLetters from key to give relevant letters to permute
+//////////////////////////////////////////////////////////////////////////////////
+//      Remove KnownLetters from key to give relevant letters to permute
 pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
         -> Option<&mut String> {
     // key.remove(key.find(letter)?);
@@ -48,31 +53,49 @@ pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>)
     }
     Some(pzl_key)
 }
-
-// Insert KnownLetters into a string at their intended index
+//////////////////////////////////////////////////////////////////////////////////
+//      Insert KnownLetters into a string at their intended index
 pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
     for j in k {
+        if DEBUG > 1 {
+            println!("{}", Red.paint("@restore_knowns-------->"));
+            println!("{} pos: {}, letter: {}", Blue.bold().paint("Insert.."), Blue.bold().paint(j.pos.to_string()), Blue.bold().paint(j.letter.to_string()));
+            
+        }
+        // Insert current letter
         s.insert(j.pos, j.letter);
+        
+        if DEBUG > 1 {
+            println!("\n{}", Blue.bold().paint("Success!"));
+            println!("{}", Red.paint("<------------------------\n"));
+        }
     }
 }
-
-// Generate STRING of KnownLetter in format "A_B___C__D____"
-//  uses restore_knowns() but with more functionality
+//////////////////////////////////////////////////////////////////////////////////
+//      Generate STRING of KnownLetter in format "A_B___C__D____"
+//          - uses restore_knowns() but with more functionality
 pub fn generate_knowns(bank: &str, knowns: Option<&Vec<KnownLetter>>) -> String {
     let mut knowns_str: String = String::new();
     let length: usize = bank.chars().count();
     // in default case, make empty vector and generate empty "___+n" string
     let empty = vec![KnownLetter::default()];
     let tmp_knowns: &Vec<KnownLetter> = knowns.unwrap_or(&empty);
-    let knowns_len: usize = knowns.unwrap_or(&vec![]).capacity();
+    let knowns_len: usize = tmp_knowns.capacity();
+
     for i in 0..(length - knowns_len) {
         knowns_str.insert(i, '_');
     }
-
+    
     restore_knowns(&mut knowns_str, tmp_knowns);
     if DEBUG > 0 {
-        println!("{}", Red.underline().paint("@generate_knowns"));
-        println!("[{}] :: {}", Red.underline().paint(&knowns_str), knowns_str.chars().count());
+        println!("{}", Red.paint("@generate_knowns-------->"));
+        println!("[{}] :: {}", 
+            Yellow.bold().paint(&knowns_str), 
+            Yellow.bold().paint(knowns_str.chars().count().to_string()) 
+        );
+        println!("\n{}", Blue.bold().paint("New String.. Success!"));
+        println!("{}", Red.paint("<------------------------\n"));
+
     }
 
     knowns_str

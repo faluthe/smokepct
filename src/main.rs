@@ -6,25 +6,17 @@ use num_format::{ToFormattedString, Locale};
 mod utilities;
 
 use utilities::{permute, factorial, dump_manifest};
-use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, generate_knowns, run_stride};
+use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, run_stride};
 use utilities::unit_tests::dry_run;
 use utilities::args::{self, Opts};
 
 // Options
 // . DEBUG = {0, 1, 2, 3, 4, 5} (level of verbosity)
+const USE_CMD: bool = true;
 const DEBUG: usize = 1;
 const PRINT: bool = true;
 const LOGS: bool = true;
 const BENCH: bool = false;
-
-// Initial Data
-const KNOWNS: &str =  "_____________";
-//const THREADS: usize = 8;
-//const PZL_KEY: &str = "EFNOPQRSTUVWXY";
-//const KNOWNS: &str =  "T____________X";
-//const STRIDE: &str = "SNF";
-//const KNOWNS: &str =  "ABCD____________";
-//const MAN_FILE: &str = "F";
 
 fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
     let thread_count = arguments.thread_count;
@@ -113,53 +105,45 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
     }
 }
 
+// Unit_test Constants
+const THREADS: usize = 8;
+const PZL_KEY: &str = "EFNOPQRSTUVWXY";
+const KNOWNS: &str =  "T____________X";
+const STRIDE: &str = "SNF";
+
 fn main() {
-    // Get arguments
-    let arguments = args::get_options(env::args());
+    if USE_CMD == true {
+        // Get arguments
+        let arguments = args::get_options(env::args());
+        smoke_pct(KNOWNS, &arguments);
+        
+        if BENCH == true {
+            dry_run(arguments.letters.chars().count(), arguments.thread_count);
+        }
 
-    smoke_pct(KNOWNS, &arguments);
-    
+    } else {
+        
+        // Run unit_tests
+        const MAN_FILE: &str = "F";
+        let const_opts = Opts{ 
+            thread_count: THREADS, 
+            letters: PZL_KEY.to_string(), 
+            pct_x: MAN_FILE.to_string(), 
+            known_letters: None, 
+            verbosity: DEBUG};
 
-    // let tmpvec = populate_knowns(Some(KNOWNS));
-    // generate_knowns(arguments.letters.as_str(), Some(&tmpvec));
+        smoke_pct(KNOWNS, Some(&const_opts).unwrap());
 
-    // populate_knowns(None);
-    // generate_knowns(arguments.letters.as_str(), None);
+        println!("{}", PZL_KEY);
 
-    // let mut i = 0;
-    // for k in ALL_KNOWNS {
-    //     println!("RUNNING ITER: {} on {}", i, k);
-    //     smoke_pct(k);
-    //     i = i + 1;
-    // }
-    // smoke_pct(KNOWNS);
-    // println!("{}", PZL_KEY);
-    // let some_vec = run_stride(PZL_KEY, STRIDE, KNOWNS);
-    // println!("KEY END {}", PZL_KEY);
-    // println!("{:?}", some_vec);
-    // for v in some_vec {
-    //     smoke_pct(&v);
-    // }
-    if BENCH == true {
-        dry_run(arguments.letters.chars().count(), arguments.thread_count);
+        let some_vec = run_stride(PZL_KEY, STRIDE, KNOWNS);
+        println!("KEY END {}", PZL_KEY);
+        println!("{:?}", some_vec);
+        for v in some_vec {
+            smoke_pct(&v, Some(&const_opts).unwrap());
+        }
     }
-
+    
+    
+    
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
