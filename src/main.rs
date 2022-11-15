@@ -5,7 +5,7 @@ use num_format::{ToFormattedString, Locale};
 use ansi_term::Colour::{Red, Yellow, Blue, Purple, Cyan, Green, White, RGB};
 
 mod utilities;
-use utilities::{permute, factorial, dump_manifest};
+use utilities::{permute, factorial, dump_manifest, new_dir};
 use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, run_stride};
 use utilities::unit_tests::dry_run;
 use utilities::args::{self, Opts};
@@ -13,7 +13,7 @@ use utilities::args::{self, Opts};
 // Options
 // . DEBUG = {0, 1, 2, 3, 4, 5} (level of verbosity)
 const USE_CMD: bool = true;
-const DEBUG: usize = 2;
+const DEBUG: usize = 1;
 const LOGS: bool = true;
 const BENCH: bool = false;
 
@@ -26,6 +26,8 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
     let start = Instant::now();
     let mut threads = vec![];
 
+    let mut as_base: usize = 0;
+    let mut as_max: usize = 0;
     if DEBUG > 0 {
         println!("\n{} {}{} :: {} {}",
             Yellow.bold().paint("["),
@@ -51,6 +53,7 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
         let mut tmp_key = letters.clone();
         let known_values = populate_knowns(Some(pre_knowns));
         remove_knowns(&mut tmp_key, known_values.to_owned());
+        let smoked_as_base = tmp_key.chars().count();
                 
         let new_max = factorial(tmp_key.len());
         let block = &new_max / thread_count;
@@ -96,6 +99,8 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
             }
         });
         threads.push(thread_block);
+        as_base = smoked_as_base;
+        as_max = new_max;
     }
     for thread in threads {
         let _ = thread.join().unwrap();
@@ -105,21 +110,25 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
         println!("\n . . \n");
         println!(" [ pct{} :: {} ]", pct_x, letters);
         println!("  . puzzle_base: {}", letters.chars().count());
-        println!("  . base_iters: {}", max_permutations.to_formatted_string(&Locale::en));
+        println!("  . base_permutes: {}", max_permutations.to_formatted_string(&Locale::en));
+        println!("  . smoked_as_base: {}", as_base);
+        println!("  . actual_permutes: {}", as_max.to_formatted_string(&Locale::en));
         println!("  . threads: {}", thread_count);
         println!("  . time: {}ms", start.elapsed().as_millis());
     }
 
     if LOGS == true {
+        new_dir("logs").unwrap();
         let mut log_file = File::options().append(true).create(true).open(
                 "logs/timers_".to_owned() + &pct_x + ".log")
                 .expect("Error creating log_file");
     
         log_file.write(format!(
-                "{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+                "{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+                "Smoked as Base:", as_base,
                 "Key:", letters, 
+                "Base:", letters.chars().count(),
                 "Threads:", thread_count, 
-                "Base:", letters.chars().count(), 
                 "Time:", start.elapsed().as_millis() 
             ).as_bytes()).unwrap();
     }
@@ -127,8 +136,8 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
 
 // Unit_test Constants
 const THREADS: usize = 8;
-const PZL_KEY: &str = "EFNOPQRSTUVWXY";
-const KNOWNS: &str =  "T____________X";
+const PZL_KEY: &str = "EFNOPQRSTUVXY";
+const KNOWNS: &str =  "T___________X";
 const STRIDE: &str = "SNF";
 const MAN_FILE: &str = "F";
 
@@ -155,7 +164,7 @@ fn main() {
             known_letters: None, 
             verbosity: DEBUG};
 
-        smoke_pct(KNOWNS, Some(&const_opts).unwrap());
+        // smoke_pct(KNOWNS, Some(&const_opts).unwrap());
 
         println!("{}", PZL_KEY);
 
