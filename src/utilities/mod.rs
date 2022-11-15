@@ -21,7 +21,10 @@ pub fn factorial(x: usize) -> usize {
 }
 
 pub fn dump_manifest(manifest_path: String) -> HashSet<String> {
-    let mut manifest = File::open(&manifest_path).expect(format!("Manifest not found at path {}", manifest_path).as_str());
+    let mut manifest = File::open(&manifest_path).expect(format!(
+        "Manifest not found at path {}", 
+        manifest_path).as_str()
+    );
     let mut data = String::new();
     manifest.read_to_string(&mut data).unwrap();
     let mut sums: HashSet<String> = HashSet::new();
@@ -29,5 +32,6 @@ pub fn dump_manifest(manifest_path: String) -> HashSet<String> {
     for l in data.lines() {
         sums.insert(l.to_uppercase());
     }
+    
     sums
 }

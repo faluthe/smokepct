@@ -19,6 +19,7 @@ impl KnownLetter {
         self.pos += 1;
     }
 }
+
 //////////////////////////////////////////////////////////////////////////////////
 //      Take a "A_B__C____D___" formatted string 
 //          && produce a vector of KnownLetters
@@ -30,7 +31,7 @@ pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
         }
     }
     knowns.shrink_to_fit();
-    if DEBUG > 0 {
+    if DEBUG > 1 {
         println!("{}", Red.paint("@populate_knowns-------->"));
         println!("{} {}", 
             Blue.bold().paint("Capacity:"), 
@@ -43,6 +44,7 @@ pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
     }
     knowns
 }
+
 //////////////////////////////////////////////////////////////////////////////////
 //      Remove KnownLetters from key to give relevant letters to permute
 pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
@@ -53,6 +55,7 @@ pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>)
     }
     Some(pzl_key)
 }
+
 //////////////////////////////////////////////////////////////////////////////////
 //      Insert KnownLetters into a string at their intended index
 pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
@@ -75,19 +78,20 @@ pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
 //      Generate STRING of KnownLetter in format "A_B___C__D____"
 //          - uses restore_knowns() but with more functionality
 pub fn generate_knowns(bank: &str, knowns: Option<&Vec<KnownLetter>>) -> String {
-    let mut knowns_str: String = String::new();
-    let length: usize = bank.chars().count();
-    // in default case, make empty vector and generate empty "___+n" string
+    // In default case, make empty vector and generate empty "___+n" string
     let empty = vec![KnownLetter::default()];
+
     let tmp_knowns: &Vec<KnownLetter> = knowns.unwrap_or(&empty);
     let knowns_len: usize = tmp_knowns.capacity();
-
+    
+    let length: usize = bank.chars().count();
+    let mut knowns_str: String = String::new();
     for i in 0..(length - knowns_len) {
         knowns_str.insert(i, '_');
     }
-    
     restore_knowns(&mut knowns_str, tmp_knowns);
-    if DEBUG > 0 {
+
+    if DEBUG > 1 {
         println!("{}", Red.paint("@generate_knowns-------->"));
         println!("[{}] :: {}", 
             Yellow.bold().paint(&knowns_str), 
@@ -101,7 +105,15 @@ pub fn generate_knowns(bank: &str, knowns: Option<&Vec<KnownLetter>>) -> String 
     knowns_str
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////
+//      Generate a vector of string possibilities with a sliding stride
+//          ex: if (A < B < C)
+//              string = "ABCDE"            (Letter Bank)
+//              stride = "ABC"              (Stride)
+//              actual_knowns = "___D_"     (N/A, coming soon!)
+//
+//              returns -> ["ABC__", "_ABC_", "__ABC"]
+//  
 pub fn run_stride(string: &str, stride: &str, actual_knowns: &str) -> Vec<String>{
     let mut current_knowns = populate_knowns(Some(stride));
     let mut knowns_str: String;
