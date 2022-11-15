@@ -2,7 +2,7 @@ use std::env;
 use std::{fs::File, io::Write, thread, time::Instant};
 use b2sum_rust::Blake2bSum;
 use num_format::{ToFormattedString, Locale};
-use ansi_term::Colour::{Red, Yellow, Blue, Purple, Cyan, Green, White, RGB};
+use ansi_term::Colour::{Yellow, Blue, Purple, Cyan, Green};
 
 mod utilities;
 use utilities::{permute, factorial, dump_manifest, new_dir};
@@ -29,6 +29,7 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
     let mut as_base: usize = 0;
     let mut as_max: usize = 0;
     if DEBUG > 0 {
+        // Console Output
         println!("\n{} {}{} :: {} {}",
             Yellow.bold().paint("["),
             Purple.bold().paint("pct"),
@@ -53,13 +54,13 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
         let mut tmp_key = letters.clone();
         let known_values = populate_knowns(Some(pre_knowns));
         remove_knowns(&mut tmp_key, known_values.to_owned());
-        let smoked_as_base = tmp_key.chars().count();
-                
+        
         let new_max = factorial(tmp_key.len());
         let block = &new_max / thread_count;
         let max = block + (block * t);
         let min = max - block;
         
+        let smoked_as_base = tmp_key.chars().count();
         if DEBUG > 0 {
             println!("{} {}{}{} {} as base {}: {}",
                 Blue.dimmed().paint("thread:"),
@@ -138,7 +139,7 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
 const THREADS: usize = 8;
 const PZL_KEY: &str = "EFNOPQRSTUVXY";
 const KNOWNS: &str =  "T___________X";
-const STRIDE: &str = "SNF";
+const STRIDE: &str = "SNFRW";
 const MAN_FILE: &str = "F";
 
 fn main() {
@@ -168,7 +169,7 @@ fn main() {
 
         println!("{}", PZL_KEY);
 
-        let some_vec = run_stride(PZL_KEY, STRIDE, KNOWNS);
+        let some_vec = run_stride(PZL_KEY, STRIDE);
         println!("KEY END {}", PZL_KEY);
         println!("{:?}", some_vec);
         for v in some_vec {
