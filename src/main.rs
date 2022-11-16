@@ -5,8 +5,8 @@ use num_format::{ToFormattedString, Locale};
 use ansi_term::Colour::{Yellow, Blue, Purple, Cyan, Green};
 
 mod utilities;
-use utilities::{permute, factorial, dump_manifest, new_dir};
-use utilities::knowns::{populate_knowns, remove_knowns, restore_knowns, run_stride};
+use utilities::{permute, factorial, dump_manifest};
+use utilities::knowns::{remove_knowns, restore_knowns};
 use utilities::unit_tests::dry_run;
 use utilities::args::{self, Opts};
 
@@ -17,7 +17,7 @@ const DEBUG: usize = 1;
 const LOGS: bool = true;
 const BENCH: bool = false;
 
-fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
+fn smoke_pct(arguments: &Opts) {
     let thread_count = arguments.thread_count;
     let letters = arguments.letters.clone();
     let pct_x = arguments.pct_x.clone();
@@ -52,9 +52,9 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
         let b2b = Blake2bSum::new(64);
 
         let mut tmp_key = letters.clone();
-        let known_values = populate_knowns(Some(pre_knowns));
-        remove_knowns(&mut tmp_key, known_values.to_owned());
-        
+
+        remove_knowns(&mut tmp_key, &arguments.known_letters);
+
         let new_max = factorial(tmp_key.len());
         let block = &new_max / thread_count;
         let max = block + (block * t);
@@ -74,14 +74,18 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
             println!("\t[min: {:>16}\tmax: {:>16}]", 
                     min.to_formatted_string(&Locale::en), 
                     max.to_formatted_string(&Locale::en));
-            println!("\t[old: {:>16}\tnew: {:>16}]", permute(min, tmp_key.chars().collect()), permute(max, tmp_key.chars().collect()));
+            let mut old = permute(min, tmp_key.chars().collect());
+            restore_knowns(&mut old, &arguments.known_letters);
+            let mut new = permute(max, tmp_key.chars().collect());
+            restore_knowns(&mut new, &arguments.known_letters);
+            println!("\t[old: {:>16}\tnew: {:>16}]", old, new);
         }
-
-        let known_values_cp = known_values.clone();
+        
+        let known_letters = arguments.known_letters.clone();
         let thread_block = thread::spawn(move || { 
             for k in min..max {
                 let mut x = permute(k, tmp_key.chars().collect());
-                restore_knowns(&mut x, &known_values_cp);
+                restore_knowns(&mut x, &known_letters);
                 let check = b2b.read_str(x.clone() + "\n");
 
                 if DEBUG > 4 {
@@ -135,45 +139,15 @@ fn smoke_pct(pre_knowns: &str, arguments: &Opts) {
     }
 }
 
-// Unit_test Constants
-const THREADS: usize = 8;
-const PZL_KEY: &str = "EFNOPQRSTUVXY";
-const KNOWNS: &str =  "T___________X";
-const STRIDE: &str = "SNFRW";
-const MAN_FILE: &str = "F";
 
 fn main() {
-    if USE_CMD == true {
-        // Get arguments
-        let arguments = args::get_options(env::args());
-        smoke_pct(KNOWNS, &arguments);
-        
-        if BENCH == true {
-            dry_run(arguments.letters.chars().count(), arguments.thread_count);
-        }
+    // Get arguments
+    let arguments = args::get_options(env::args());
 
+    smoke_pct(&arguments);
 
+    if BENCH == true {
+        dry_run(arguments.letters.chars().count(), arguments.thread_count);
+    }
 
-
-
-    } else {
-        // Run unit_tests
-        let const_opts = Opts{ 
-            thread_count: THREADS, 
-            letters: PZL_KEY.to_string(), 
-            pct_x: MAN_FILE.to_string(), 
-            known_letters: None, 
-            verbosity: DEBUG};
-
-        // smoke_pct(KNOWNS, Some(&const_opts).unwrap());
-
-        println!("{}", PZL_KEY);
-
-        let some_vec = run_stride(PZL_KEY, STRIDE);
-        println!("KEY END {}", PZL_KEY);
-        println!("{:?}", some_vec);
-        for v in some_vec {
-            smoke_pct(&v, Some(&const_opts).unwrap());
-        }
-    }  
 }

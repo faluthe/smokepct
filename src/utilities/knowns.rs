@@ -1,4 +1,5 @@
 use ansi_term::Colour::{Red, Yellow, Blue};
+
 use crate::DEBUG;
 
 #[derive(Debug, Clone, Copy)]
@@ -24,9 +25,10 @@ impl KnownLetter {
 //      Take a "A_B__C____D___" formatted string 
 //          -> produce a vector of KnownLetters
 //
-pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
+pub fn populate_knowns(string: &str) -> Vec<KnownLetter> {
     let mut knowns: Vec<KnownLetter> = Vec::new();
-    for (position, character) in string.unwrap_or_default().char_indices() {
+    let mut i: usize = 0;
+    for (position, character) in string.char_indices() {
         if character != '_' {
             knowns.push(KnownLetter {letter: character, pos: position});
         }
@@ -49,19 +51,17 @@ pub fn populate_knowns(string: Option<&str>) -> Vec<KnownLetter> {
 //////////////////////////////////////////////////////////////////////////////////
 //      Remove KnownLetters from key to give relevant letters to permute
 //
-pub fn remove_knowns(pzl_key: &mut String, knowns: Vec<KnownLetter>) 
-        -> Option<&mut String> {
-    // key.remove(key.find(letter)?);
+pub fn remove_knowns(pzl_key: &mut String, knowns: &Vec<KnownLetter>) {
     for value in knowns {
-        pzl_key.remove(pzl_key.find(value.letter)?);
+        pzl_key.remove(pzl_key.find(value.letter)
+            .expect(format!("Could not find letter '{}' in key '{}'", value.letter, pzl_key).as_str()));
     }
-    Some(pzl_key)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
 //      Insert KnownLetters into a string at their intended index
 //
-pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
+pub fn restore_knowns(s: &mut String, known_letters: &Vec<KnownLetter>) {
     for j in k {
         if DEBUG > 3 {
             println!("{}", Red.paint("@restore_knowns-------->"));
@@ -73,6 +73,7 @@ pub fn restore_knowns(s: &mut String, k: &Vec<KnownLetter>) {
             
         }
         // Insert current letter
+
         s.insert(j.pos, j.letter);
         
         if DEBUG > 3 {
@@ -122,9 +123,8 @@ pub fn generate_knowns(bank: &str, knowns: Option<&Vec<KnownLetter>>) -> String 
 //
 //              returns -> ["ABC__", "_ABC_", "__ABC"]
 //  
-pub fn run_stride(string: &str, stride: &str) -> Vec<String>{
-    // , actual_knowns: &str
-    let mut current_knowns = populate_knowns(Some(stride));
+pub fn run_stride(string: &str, stride: &str, actual_knowns: &str) -> Vec<String>{
+    let mut current_knowns = populate_knowns(stride);
     let mut knowns_str: String;
     let mut str_set: Vec<String> = Vec::new();
     str_set.push(generate_knowns(string, Some(&current_knowns)));
