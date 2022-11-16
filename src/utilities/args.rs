@@ -142,6 +142,7 @@ fn help_me() {
     -l:        The original key to iterate. Found in a pct's \"letter: \" section
     -x:        pctX puzzle number (0, 1, ..., A, B). The program will look for a manifest
                file under MANIFEST/X, where X is the puzzle number (MANIFEST/1, MANIFEST/A)
+    --stride:  A stride of consecutive known letters eg. \"ABC\" 
                The manifest file for any given pct is found at:
                /var/public/SEMESTER/CLASS/pct#/MANIFEST";
 
