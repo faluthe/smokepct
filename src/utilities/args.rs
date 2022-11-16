@@ -1,5 +1,5 @@
 use std::{env::Args, process::exit};
-
+use crate::utilities::knowns::generate_stride;
 use super::knowns::KnownLetter;
 
 #[derive(Default)]
@@ -9,6 +9,7 @@ pub struct Opts {
     pub pct_x: String,
     pub known_letters: Vec<KnownLetter>,
     pub verbosity: usize,
+    pub stride: Vec<String>
 }
 
 fn get_arg(args: &Vec<String>, i: usize, c: char) -> String {
@@ -18,10 +19,12 @@ fn get_arg(args: &Vec<String>, i: usize, c: char) -> String {
     args[i].clone()
 }
 
-fn get_long_opt(_opts: &mut Opts, arg: &String) {
-    match arg.as_str() {
+fn get_long_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
+    match args[i].as_str()  {
         "--help" => help_me(),
+        "--stride" => opts.stride=generate_stride(&opts.letters, &get_arg(args, i + 1, ' '), ""),
         x => panic!("Invalid long option: {}", x)
+
     }
 }
 
@@ -51,7 +54,7 @@ fn get_short_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
     for c in args[i].chars().skip(1) {
         match c {
             '-' => {
-                get_long_opt(opts, &args[i]);
+                get_long_opt(opts, &args, i);
                 return
             },
             'h' => help_me(),
@@ -68,14 +71,6 @@ fn get_short_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
                 offset += 1;
                 opts.pct_x = get_arg(&args, i + offset, c);
             },
-            // '0' => {
-            //     offset += 1;
-            //     opts.known_letters.push(KnownLetter{ letter: get_letter(&args, i + offset, c), pos: 0 });
-            // }
-            // '1' => {
-            //     offset += 1;
-            //     opts.known_letters.push(KnownLetter{ letter: get_letter(&args, i + offset, c), pos: 1 });
-            // }
             x => {
                 // Known numbers are hex 0-F
                 if x.is_ascii_hexdigit() {

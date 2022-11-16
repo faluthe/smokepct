@@ -1,6 +1,6 @@
 use ansi_term::Colour::{Red, Yellow, Blue};
 
-use crate::DEBUG;
+use crate::{DEBUG, smoke_pct};
 
 #[derive(Debug, Clone, Copy)]
 pub struct KnownLetter {
@@ -123,14 +123,14 @@ pub fn generate_knowns(bank: &str, knowns: Option<&Vec<KnownLetter>>) -> String 
 //
 //              returns -> ["ABC__", "_ABC_", "__ABC"]
 //  
-pub fn run_stride(string: &str, stride: &str, actual_knowns: &str) -> Vec<String>{
+pub fn generate_stride(string: &str, stride: &str, actual_knowns: &str) -> Vec<String> {
     let mut current_knowns = populate_knowns(stride);
     let mut knowns_str: String;
     let mut str_set: Vec<String> = Vec::new();
     str_set.push(generate_knowns(string, Some(&current_knowns)));
     
-    let top = string.chars().count() - stride.chars().count() - 1;
-    for _ in 0..top - 1 {
+    let top = string.chars().count() - stride.chars().count();
+    for _ in 0..top {
         for k in current_knowns.as_mut_slice() {
             if k.pos < string.chars().count() {
                 k.increment_knowns();

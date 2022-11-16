@@ -12,7 +12,6 @@ use utilities::args::{self, Opts};
 
 // Options
 // . DEBUG = {0, 1, 2, 3, 4, 5} (level of verbosity)
-const USE_CMD: bool = true;
 const DEBUG: usize = 1;
 const LOGS: bool = true;
 const BENCH: bool = false;
@@ -143,6 +142,9 @@ fn smoke_pct(arguments: &Opts) {
 fn main() {
     // Get arguments
     let arguments = args::get_options(env::args());
+    // let some_vec = utilities::knowns::run_stride("HJKLMNPQRSTUVWYZ", "MNP", "");
+    println!("{:?}", arguments.stride);
+    
 
     smoke_pct(&arguments);
 
