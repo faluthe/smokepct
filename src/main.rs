@@ -5,7 +5,7 @@ use num_format::{ToFormattedString, Locale};
 use ansi_term::Colour::{Yellow, Blue, Purple, Cyan, Green};
 
 mod utilities;
-use utilities::{permute, factorial, dump_manifest};
+use utilities::{permute, factorial, dump_manifest, new_dir};
 use utilities::knowns::{remove_knowns, restore_knowns};
 use utilities::unit_tests::dry_run;
 use utilities::args::{self, Opts};
@@ -123,7 +123,7 @@ fn smoke_pct(arguments: &Opts) {
     }
 
     if LOGS == true {
-        new_dir("logs").unwrap();
+        utilities::new_dir("logs").unwrap();
         let mut log_file = File::options().append(true).create(true).open(
                 "logs/timers_".to_owned() + &pct_x + ".log")
                 .expect("Error creating log_file");
