@@ -6,6 +6,7 @@ use crate::DEBUG;
 pub mod unit_tests;
 pub mod knowns;
 pub mod args;
+pub mod run_stride;
 pub mod smoke_pct;
 
 pub fn permute(mut k: usize, mut string: Vec<char>) -> String {

@@ -22,10 +22,12 @@ fn get_arg(args: &Vec<String>, i: usize, c: char) -> String {
 fn get_long_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
     match args[i].as_str()  {
         "--help" => help_me(),
-        "--stride" => opts.stride=generate_stride(&opts.letters, &get_arg(args, i + 1, ' '), ""),
+        "--stride" => opts.stride=generate_stride(
+                &opts.letters, &get_arg(args, i + 1, ' ')
+        ),
         x => panic!("Invalid long option: {}", x)
-
     }
+    opts.stride.shrink_to_fit();
 }
 
 fn get_letter(args: &Vec<String>, i: usize, c: char) -> char {
