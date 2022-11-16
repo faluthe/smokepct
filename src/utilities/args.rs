@@ -7,7 +7,7 @@ pub struct Opts {
     pub thread_count: usize,
     pub letters: String,
     pub pct_x: String,
-    pub known_letters: Option<Vec<KnownLetter>>,
+    pub known_letters: Vec<KnownLetter>,
     pub verbosity: usize,
 }
 
@@ -24,6 +24,28 @@ fn get_long_opt(_opts: &mut Opts, arg: &String) {
         x => panic!("Invalid long option: {}", x)
     }
 }
+
+fn get_letter(args: &Vec<String>, i: usize, c: char) -> char {
+    let arg = get_arg(args, i, c);
+    if arg.len() > 1 {
+        panic!("Invalid known letter format, input single letter")
+    }
+    arg.chars().nth(0).unwrap()
+}
+
+fn handle_known(opt: &Opts, letter: char, pos: usize) -> KnownLetter {
+    if pos > opt.letters.len() {
+        if opt.letters.is_empty() {
+            panic!("Must provide letters before known letters")
+        } else {
+            panic!("Known letter position is out of bounds")
+        }
+    } else if !opt.letters.contains(letter) {
+        panic!("Known letter not found in key")
+    }
+    KnownLetter { letter, pos }
+}
+
 fn get_short_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
     let mut offset = 0;
     for c in args[i].chars().skip(1) {
@@ -46,7 +68,24 @@ fn get_short_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
                 offset += 1;
                 opts.pct_x = get_arg(&args, i + offset, c);
             },
-            x => panic!("Invalid option: {}", x)
+            // '0' => {
+            //     offset += 1;
+            //     opts.known_letters.push(KnownLetter{ letter: get_letter(&args, i + offset, c), pos: 0 });
+            // }
+            // '1' => {
+            //     offset += 1;
+            //     opts.known_letters.push(KnownLetter{ letter: get_letter(&args, i + offset, c), pos: 1 });
+            // }
+            x => {
+                // Known numbers are hex 0-F
+                if x.is_ascii_hexdigit() {
+                    offset += 1;
+                    let kl = handle_known(&opts, get_letter(&args, i + offset, c), usize::from_str_radix(&x.to_string(), 16).unwrap());
+                    opts.known_letters.push(kl);
+                } else {
+                    panic!("Invalid option: {}", x)
+                }
+            },
         }
     }
 }
@@ -85,7 +124,9 @@ pub fn get_options(args: Args) -> Opts {
 
     // Check opts
     check_opts(&mut opts);
-
+    // Sort known_letters (needs to be sorted to work)
+    opts.known_letters.sort_by(|a, b| a.pos.cmp(&b.pos));
+    
     opts
 }
 
