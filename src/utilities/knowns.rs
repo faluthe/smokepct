@@ -27,7 +27,6 @@ impl KnownLetter {
 //
 pub fn populate_knowns(string: &str) -> Vec<KnownLetter> {
     let mut knowns: Vec<KnownLetter> = Vec::new();
-    let mut i: usize = 0;
     for (position, character) in string.char_indices() {
         if character != '_' {
             knowns.push(KnownLetter {letter: character, pos: position});

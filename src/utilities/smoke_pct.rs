@@ -9,6 +9,8 @@ use crate::utilities::knowns::{remove_knowns, restore_knowns};
 use crate::utilities::args::{Opts};
 use crate::{DEBUG, LOGS};
 
+use super::knowns::populate_knowns;
+
 pub fn run_stride(arguments: &Opts) {
     let thread_count = arguments.thread_count;
     let letters = arguments.letters.clone();
@@ -39,49 +41,41 @@ pub fn run_stride(arguments: &Opts) {
         );
     }
 
-    for t in 0..thread_count {
+    let strides_vec: Vec<String> = arguments.stride.to_owned();
+    for stride_str in strides_vec {
         let sums = dump_manifest(String::from("MANIFEST/".to_owned() + &pct_x));
         let b2b = Blake2bSum::new(64);
 
         let mut tmp_key = letters.clone();
-
-        remove_knowns(&mut tmp_key, &arguments.known_letters);
-
+        
+        remove_knowns(&mut tmp_key, &populate_knowns(&stride_str));
         let new_max = factorial(tmp_key.len());
-        let block = &new_max / thread_count;
-        let max = block + (block * t);
-        let min = max - block;
         
         let smoked_as_base = tmp_key.chars().count();
         if DEBUG > 0 {
             println!("{} {}{}{} {} as base {}: {}",
-                Blue.dimmed().paint("thread:"),
-                Blue.dimmed().paint("("),
-                Blue.paint(t.to_string()),
-                Blue.dimmed().paint(")"),
-                Green.bold().paint(&letters), 
-                Purple.bold().paint(tmp_key.chars().count().to_string()), 
-                Purple.paint(&tmp_key)
-            );
-            println!("\t[min: {:>16}\tmax: {:>16}]", 
-                    min.to_formatted_string(&Locale::en), 
-                    max.to_formatted_string(&Locale::en));
-            let mut old = permute(min, tmp_key.chars().collect());
-            restore_knowns(&mut old, &arguments.known_letters);
-            let mut new = permute(max, tmp_key.chars().collect());
-            restore_knowns(&mut new, &arguments.known_letters);
-            println!("\t[old: {:>16}\tnew: {:>16}]", old, new);
-        }
+            Blue.dimmed().paint("thread:"),
+            Blue.dimmed().paint("("),
+            Blue.paint(&stride_str.to_string()),
+            Blue.dimmed().paint(")"),
+            Green.bold().paint(&letters), 
+            Purple.bold().paint(tmp_key.chars().count().to_string()), 
+            Purple.paint(&tmp_key)
+        );
         
-        let known_letters = arguments.known_letters.clone();
-        let thread_block = thread::spawn(move || { 
-            for k in min..max {
-                let mut x = permute(k, tmp_key.chars().collect());
-                restore_knowns(&mut x, &known_letters);
-                let check = b2b.read_str(x.clone() + "\n");
+    }
+    
+    let thread_block = thread::spawn(move || { 
+        for k in 0..new_max {
+            let mut x = permute(k, tmp_key.chars().collect());
+            restore_knowns(&mut x, &populate_knowns(&stride_str));
+            let check = b2b.read_str(x.clone() + "\n");
 
                 if DEBUG > 4 {
+                    println!("{}", Green.paint("@single_permute-------->"));
                     println!("x: {}", x);
+                    println!("{}", Green.paint("<------------------------\n"));
+
                 }
 
                 if sums.contains(&check) {

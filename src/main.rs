@@ -4,8 +4,11 @@ use b2sum_rust::Blake2bSum;
 use num_format::{ToFormattedString, Locale};
 use ansi_term::Colour::{Yellow, Blue, Purple, Cyan, Green};
 
+// Local
+mod envs;
 mod utilities;
-use utilities::{permute, factorial, dump_manifest, new_dir};
+use utilities::smoke_pct::run_stride;
+use utilities::{permute, factorial, dump_manifest};
 use utilities::knowns::{remove_knowns, restore_knowns};
 use utilities::unit_tests::dry_run;
 use utilities::args::{self, Opts};
@@ -143,10 +146,11 @@ fn main() {
     // Get arguments
     let arguments = args::get_options(env::args());
     // let some_vec = utilities::knowns::run_stride("HJKLMNPQRSTUVWYZ", "MNP", "");
-    println!("{:?}", arguments.stride);
+    // println!("{:?}", arguments.stride);
     
+    run_stride(&arguments);
 
-    smoke_pct(&arguments);
+    // smoke_pct(&arguments);
 
     if BENCH == true {
         dry_run(arguments.letters.chars().count(), arguments.thread_count);
