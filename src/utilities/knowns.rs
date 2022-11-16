@@ -62,7 +62,7 @@ pub fn remove_knowns(pzl_key: &mut String, knowns: &Vec<KnownLetter>) {
 //      Insert KnownLetters into a string at their intended index
 //
 pub fn restore_knowns(s: &mut String, known_letters: &Vec<KnownLetter>) {
-    for j in k {
+    for j in known_letters {
         if DEBUG > 3 {
             println!("{}", Red.paint("@restore_knowns-------->"));
             println!("{} pos: {}, letter: {}", 
