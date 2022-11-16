@@ -2,9 +2,9 @@ use std::env;
 use std::{fs::File, io::Write, thread, time::Instant};
 use b2sum_rust::Blake2bSum;
 use num_format::{ToFormattedString, Locale};
+use ansi_term::Colour::{Yellow, Blue, Purple, Cyan, Green};
 
 mod utilities;
-
 use utilities::{permute, factorial, dump_manifest};
 use utilities::knowns::{remove_knowns, restore_knowns};
 use utilities::unit_tests::dry_run;
@@ -12,19 +12,10 @@ use utilities::args::{self, Opts};
 
 // Options
 // . DEBUG = {0, 1, 2, 3, 4, 5} (level of verbosity)
+const USE_CMD: bool = true;
 const DEBUG: usize = 1;
-const PRINT: bool = true;
 const LOGS: bool = true;
 const BENCH: bool = false;
-
-// Initial Data
-// const KNOWNS: &str =  "_____________";
-//const THREADS: usize = 8;
-//const PZL_KEY: &str = "EFNOPQRSTUVWXY";
-//const KNOWNS: &str =  "T____________X";
-//const STRIDE: &str = "SNF";
-//const KNOWNS: &str =  "ABCD____________";
-//const MAN_FILE: &str = "F";
 
 fn smoke_pct(arguments: &Opts) {
     let thread_count = arguments.thread_count;
@@ -35,10 +26,25 @@ fn smoke_pct(arguments: &Opts) {
     let start = Instant::now();
     let mut threads = vec![];
 
-    if PRINT == true {
-        println!("[ pct{} :: {} ]", pct_x, letters);
-        println!("base: {}", letters.chars().count());
-        println!("max: {} \n", max_permutations.to_formatted_string(&Locale::en));
+    let mut as_base: usize = 0;
+    let mut as_max: usize = 0;
+    if DEBUG > 0 {
+        // Console Output
+        println!("\n{} {}{} :: {} {}",
+            Yellow.bold().paint("["),
+            Purple.bold().paint("pct"),
+            Purple.bold().paint(&pct_x), 
+            Purple.bold().paint(&letters),
+            Yellow.bold().paint("]")
+        );
+        println!(" . {} {}",
+            Yellow.paint("base:"),
+            Purple.bold().paint(letters.chars().count().to_string())
+        );
+        println!(" . {} {} \n",
+            Yellow.paint("max:"),
+            Purple.bold().paint(max_permutations.to_formatted_string(&Locale::en))
+        );
     }
 
     for t in 0..thread_count {
@@ -46,6 +52,7 @@ fn smoke_pct(arguments: &Opts) {
         let b2b = Blake2bSum::new(64);
 
         let mut tmp_key = letters.clone();
+
         remove_knowns(&mut tmp_key, &arguments.known_letters);
 
         let new_max = factorial(tmp_key.len());
@@ -53,9 +60,17 @@ fn smoke_pct(arguments: &Opts) {
         let max = block + (block * t);
         let min = max - block;
         
-        if PRINT == true {
-            println!("thread: ({}) {} as base {}: {}", 
-                    t, letters, tmp_key.chars().count(), tmp_key);
+        let smoked_as_base = tmp_key.chars().count();
+        if DEBUG > 0 {
+            println!("{} {}{}{} {} as base {}: {}",
+                Blue.dimmed().paint("thread:"),
+                Blue.dimmed().paint("("),
+                Blue.paint(t.to_string()),
+                Blue.dimmed().paint(")"),
+                Green.bold().paint(&letters), 
+                Purple.bold().paint(tmp_key.chars().count().to_string()), 
+                Purple.paint(&tmp_key)
+            );
             println!("\t[min: {:>16}\tmax: {:>16}]", 
                     min.to_formatted_string(&Locale::en), 
                     max.to_formatted_string(&Locale::en));
@@ -78,43 +93,52 @@ fn smoke_pct(arguments: &Opts) {
                 }
 
                 if sums.contains(&check) {
-                    if PRINT == true {
-                        println!("Found solution: {} [took {}ms]", 
-                            x, start.elapsed().as_millis());
+                    if DEBUG > 0 {
+                        println!("{} {} [took {}ms]",
+                            Cyan.bold().paint("Found solution:"), 
+                            Cyan.bold().paint(&x),
+                            start.elapsed().as_millis());
                     }
                     break;
                 }
             }
         });
         threads.push(thread_block);
+        as_base = smoked_as_base;
+        as_max = new_max;
     }
     for thread in threads {
         let _ = thread.join().unwrap();
     }
 
-    if PRINT == true {
+    if DEBUG > 0 {
         println!("\n . . \n");
         println!(" [ pct{} :: {} ]", pct_x, letters);
         println!("  . puzzle_base: {}", letters.chars().count());
-        println!("  . iters: {}", max_permutations.to_formatted_string(&Locale::en));
+        println!("  . base_permutes: {}", max_permutations.to_formatted_string(&Locale::en));
+        println!("  . smoked_as_base: {}", as_base);
+        println!("  . actual_permutes: {}", as_max.to_formatted_string(&Locale::en));
         println!("  . threads: {}", thread_count);
         println!("  . time: {}ms", start.elapsed().as_millis());
     }
 
     if LOGS == true {
+        new_dir("logs").unwrap();
         let mut log_file = File::options().append(true).create(true).open(
                 "logs/timers_".to_owned() + &pct_x + ".log")
                 .expect("Error creating log_file");
     
         log_file.write(format!(
-                "{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+                "{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}\n{:9} {}ms\n\n", 
+                "Smoked as Base:", as_base,
                 "Key:", letters, 
+                "Base:", letters.chars().count(),
                 "Threads:", thread_count, 
-                "Base:", letters.chars().count(), 
                 "Time:", start.elapsed().as_millis() 
             ).as_bytes()).unwrap();
     }
 }
+
 
 fn main() {
     // Get arguments
