@@ -68,14 +68,6 @@ fn get_short_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
                 offset += 1;
                 opts.pct_x = get_arg(&args, i + offset, c);
             },
-            // '0' => {
-            //     offset += 1;
-            //     opts.known_letters.push(KnownLetter{ letter: get_letter(&args, i + offset, c), pos: 0 });
-            // }
-            // '1' => {
-            //     offset += 1;
-            //     opts.known_letters.push(KnownLetter{ letter: get_letter(&args, i + offset, c), pos: 1 });
-            // }
             x => {
                 // Known numbers are hex 0-F
                 if x.is_ascii_hexdigit() {
