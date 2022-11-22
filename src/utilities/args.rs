@@ -8,8 +8,9 @@ pub struct Opts {
     pub letters: String,
     pub pct_x: String,
     pub known_letters: Vec<KnownLetter>,
-    pub verbosity: usize,
-    pub stride: Vec<String>
+    pub verbosity: Option<usize>,
+    pub stride: Vec<String>,
+    pub path: String,
 }
 
 fn get_arg(args: &Vec<String>, i: usize, c: char) -> String {
@@ -71,6 +72,14 @@ fn get_short_opt(opts: &mut Opts, args: &Vec<String>, i: usize) {
                 offset += 1;
                 opts.pct_x = get_arg(&args, i + offset, c);
             },
+            'p' => {
+                offset += 1;
+                opts.path = get_arg(&args, i + offset, c);
+            },
+            'v' => {
+                offset += 1;
+                opts.verbosity = Some(usize::from_str_radix(get_arg(&args, i + offset, c).as_str(), 10).unwrap());
+            }
             x => {
                 // Known numbers are hex 0-F
                 if x.is_ascii_hexdigit() {

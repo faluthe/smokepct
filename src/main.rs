@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::env;
 use std::{fs::File, io::Write, thread, time::Instant};
 use b2sum_rust::Blake2bSum;
@@ -21,13 +22,20 @@ fn smoke_pct(arguments: &Opts) {
     let letters = arguments.letters.clone();
     let pct_x = arguments.pct_x.clone();
     let max_permutations = factorial(letters.len());
+    let debug;
+
+    // Need this for portability pls use lowercase now
+    match arguments.verbosity {
+        Some(d) => debug = d,
+        None => debug = DEBUG,
+    }
 
     let start = Instant::now();
     let mut threads = vec![];
 
     let mut as_base: usize = 0;
     let mut as_max: usize = 0;
-    if DEBUG > 0 {
+    if debug > 0 {
         // Console Output
         println!("\n{} {}{} :: {} {}",
             Yellow.bold().paint("["),
@@ -47,7 +55,12 @@ fn smoke_pct(arguments: &Opts) {
     }
 
     for t in 0..thread_count {
-        let sums = dump_manifest(String::from("MANIFEST/".to_owned() + &pct_x));
+        let sums;
+        if arguments.path.is_empty() {
+            sums = dump_manifest(String::from("MANIFEST/".to_owned() + &pct_x));
+        } else {
+            sums = dump_manifest(arguments.path.clone());
+        }
         let b2b = Blake2bSum::new(64);
 
         let mut tmp_key = letters.clone();
@@ -60,7 +73,7 @@ fn smoke_pct(arguments: &Opts) {
         let min = max - block;
         
         let smoked_as_base = tmp_key.chars().count();
-        if DEBUG > 0 {
+        if debug > 0 {
             println!("{} {}{}{} {} as base {}: {}",
                 Blue.dimmed().paint("thread:"),
                 Blue.dimmed().paint("("),
@@ -87,12 +100,14 @@ fn smoke_pct(arguments: &Opts) {
                 restore_knowns(&mut x, &known_letters);
                 let check = b2b.read_str(x.clone() + "\n");
 
-                if DEBUG > 4 {
+                if debug > 4 {
                     println!("x: {}", x);
                 }
 
                 if sums.contains(&check) {
-                    if DEBUG > 0 {
+                    if debug == 0 {
+                        println!("{x}");
+                    } else {
                         println!("{} {} [took {}ms]",
                             Cyan.bold().paint("Found solution:"), 
                             Cyan.bold().paint(&x),
@@ -110,7 +125,7 @@ fn smoke_pct(arguments: &Opts) {
         let _ = thread.join().unwrap();
     }
 
-    if DEBUG > 0 {
+    if debug > 0 {
         println!("\n . . \n");
         println!(" [ pct{} :: {} ]", pct_x, letters);
         println!("  . puzzle_base: {}", letters.chars().count());
@@ -143,7 +158,7 @@ fn main() {
     // Get arguments
     let arguments = args::get_options(env::args());
     // let some_vec = utilities::knowns::run_stride("HJKLMNPQRSTUVWYZ", "MNP", "");
-    println!("{:?}", arguments.stride);
+    // println!("{:?}", arguments.stride);
     
 
     smoke_pct(&arguments);
